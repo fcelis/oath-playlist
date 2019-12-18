@@ -2,9 +2,10 @@
   "name": "oath-playlist",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": ".js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
@@ -12,7 +13,10 @@
   "dependencies": {
     "ejs": "^3.0.1",
     "express": "^4.17.1",
+    "mongoose": "^5.8.1",
+    "nodemon": "^2.0.2",
     "passport": "^0.4.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "request": "^2.88.0"
   }
 }
