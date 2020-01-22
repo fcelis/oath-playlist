@@ -11,13 +11,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "ejs": "^3.0.1",
     "express": "^4.17.1",
+    "http": "0.0.0",
     "json": "^9.0.6",
     "mongoose": "^5.8.1",
     "nodemon": "^2.0.2",
     "passport": "^0.4.0",
     "passport-google-oauth20": "^2.0.0",
+    "query-string": "^6.10.1",
     "request": "^2.88.0",
     "superagent": "^5.1.3"
   }

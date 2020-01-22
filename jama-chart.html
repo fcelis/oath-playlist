@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="http://54.213.65.177:3004/css/style.css"> -->
+    <script defer src="https://use.fontawesome.com/releases/v5.8.2/js/regular.js" integrity="sha384-iFYyWQkY/Zvsdq3IIxRJI2FBoXPj6g73ok7rIH3sZGulA7E5PvFqB5BOELomUuyh" crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.8.2/js/fontawesome.js" integrity="sha384-Ia7KZbX22R7DDSbxNmxHqPQ15ceNzg2U4h5A8dy3K47G2fV1k658BTxXjp7rdhXa" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- PapaParse - JSON -> CSV converter -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.0.2/papaparse.min.js"></script>
+    <!-- progress bar -->
+    <script data-pace-options='{"target": "body", "ghostTime": 100, "restartOnRequestAfter": 200, "trackMethods": ["GET"], "trackWebSockets": true }' src="https://cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.min.js"></script>
+    <!-- <link href="/pace/themes/pace-theme-barber-shop.css" rel="stylesheet" /> -->
+    <style>
+    /* Loading bar status */
+    .pace {
+        -webkit-pointer-events: none;
+        pointer-events: none;
+    
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+    }
+    
+    .pace-inactive {
+        display: none;
+    }
+    
+    .pace .pace-progress {
+        background: #29d;
+        position: fixed;
+        z-index: 2000;
+        top: 0;
+        right: 100%;
+        width: 100%;
+        height: 2px;
+    }
+    </style>
+    <script>
+
+    let projectNames = [];
+    let project;
+    //this will be address of api
+    let fetchAddress;
+
+    </script>
+ </head>
+
+<body>
+    <div id="container" style="width: 100%">
+        <img src="Alpine.png" style="margin-left: 50px;padding:8px; background-color:white;  text-align: center;"/> <hr>
+        <p style="text-align: left; background-color: white; margin-left: 60px;" class="h3">
+           <span> JAMA Results </span>
+        </p> 
+        <form style="text-align: left; margin-left: 60px;" > 
+            <!-- <span>Choose Project:&nbsp;&nbsp;</span> -->
+            <!-- onChange="window.document.location.href=this.options[this.selectedIndex].value;"  -->
+            <select id="first-choice" class="btn btn-primary dropdown-toggle">
+                <option selected value="base">- Project - </option>
+            </select>&nbsp;
+            
+        </form>
+                
+        <!-- //This will be the chart -->
+        <div id="myDiv" style="height: 760px"></div> 
+    </div>
+    
+    <script>
+        
+        //on document load, bring up the various machine_ids we can choose between
+        $(document).ready(function() {
+            getAuth();
+            //make server that will find all unique projects - CREATE ROUTE FOR FINDING PROJECTS
+            $.getJSON("http://54.213.65.177:3004/posts/machine/machine_ids", async function(data) {
+
+                // will need to cycle through route to get only project names = UNIQUE PROJECTS
+                //console.log(data);
+                await $.each(data, function(index, value) {
+                    console.log(value + ' project was added...');
+                    // projects.push(value);  --not used yet
+
+                    //give uniuqe project names for dropdown
+                    projectNames.push('Project_'+ value );
+                });
+
+                
+                //populate the dropdown
+                for(i=0; i<projectNames.length; i++){                    
+                    if(projectNames[i] != undefined){
+                        $firstChoice.append("<option>" + projectNames[i] + "</option>"); 
+                    }
+                }
+            });
+        });
+
+        //dropdown for selecting board for data
+        $("#first-choice").change(function() {
+            var holdDropdownVal = document.getElementById("first-choice");
+            //need to slice out the value from the dropdowns - 102219 removed regExp 
+            //var regExp = /\(([^)]+)\)/;
+
+            //machine = regExp.exec(holdDropdownVal.options[holdDropdownVal.selectedIndex].text)[1];
+            project = holdDropdownVal.options[holdDropdownVal.selectedIndex].value;
+            project = project.split("_").pop();
+            
+            //var matches = regExp.exec(machine);
+
+            console.log('project chosen --> '+project);
+            
+            //var holdSecondDropdownVal = document.getElementById("second-choice");
+            //holdSecondDropdownVal.options[value="0"];   
+            
+
+            //will revisit this LATER
+            apiGetAll(project);
+        });
+
+        
+        
+        function getAuth(){
+            $.ajax({
+                type: 'POST',
+                url: 'https://alpine-electronics.jamacloud.com/rest/oauth/token',
+                data: {},
+                crossDomain: true,
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(mrosik + ':' + Makalaka123))))
+                }
+            });
+        }
+        
+        //apiGetAll(machine_id);
+        function apiGetAll(yo){
+            try {
+                console.log('in apiGetAll() -- getting project data');
+
+                //start of fetch/GET
+                 $.getJSON((fetchAddress+yo), async function(data) {
+                
+                    let tempDate;
+                    await data.forEach((item) => {
+
+                        tempDate = new Date(item.date);
+                        let tzoffset = (new Date()).getTimezoneOffset() * (60000); //offset in milliseconds
+                        let localISOTime = (new Date(tempDate - tzoffset)).toISOString().slice(0, -1);
+                        
+                    });
+
+                    //CPU Total
+                    xDataCPU = yo.map(item => {                        
+                        holdDate = new Date(item.date);  
+                        return holdDate;
+                    });
+
+                    yDataCPU = yo.map(item => { 
+                        try{
+                            var yTemp = (item.data[0].cpu);
+                            return yTemp;
+                        } catch {
+
+                        }
+                    });
+                    
+                    yDataMemUsed = yo.map(item => { 
+                        try {
+                            var temp = (item.data[0].used_memory);
+                            //console.log('yDataMemUsed: '+ temp);
+                            return temp;
+                        }
+                        catch {
+
+                        }
+                    });
+                    //End networkOut
+
+                    
+                    //each of these data points need to contain all pass/fail per given project in order of releases
+                    core_usage_6 = {
+                        type: "bar",
+                        mode: "lines",
+                        name: 'CPU Core 6 Used - %',
+                        x: xDataCPU,
+                        y: yData_core_usage_6,
+                        line: {color: '#BF2063'},
+                        hoverlabel: {namelength: -1},
+                        layout: {legend: 'toggleothers'},
+                        visible: 'legendonly'
+                    }; 
+
+                    core_usage_7 = {
+                        type: "bar",
+                        mode: "lines",
+                        name: 'CPU Core 7 Used - %',
+                        x: xDataCPU,
+                        y: yData_core_usage_7,
+                        line: {color: '#DF40B1'},
+                        hoverlabel: {namelength: -1},
+                        layout: {legend: 'toggleothers'},
+                        visible: 'legendonly'
+                    };                         
+                    //end of updated data 
+
+                    //data order for chart
+                    data = [core_usage_6, core_usage_7];
+                    // 
+                    let layout = {
+                        title: `Project: ` + project,
+                        showlegend: true,
+                        hoverlabel: {width: 777},
+                        xaxis: {
+                            rangeselector: {buttons: [
+                                {
+                                    count: 7,
+                                    step: 'day',
+                                    stepmode: 'backward'
+                                },
+                                {
+                                    step: 'all'
+                                }
+                                ]},
+                            rangeslider: {
+                                // oneWeekAgo,
+                                // today
+                            },
+                            range: [
+                                // oneWeekAgo,
+                                // today
+                            ],
+                            type: 'date'
+                        },
+                        yaxis: {
+                            autorange: true,
+                            range: [],
+                            type: 'linear'
+                        }
+                    };
+                    //render chart
+                    Plotly.newPlot(myDiv, data, layout);         
+                    //show link to download CSV
+                    
+                    updates = {
+                            layout: {legend:'toggleothers'}
+                    }
+                    itemEventsData.layout.legend = 'toggleothers';
+                        
+            })
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+</script>    
+
+<script>
+    // way to download/save to csv file
+    function downloadCSV(){
+        var csv = Papa.unparse(itemsFormatted);
+        var holdDate = new Date();
+        var newHoldDate = holdDate.toLocaleString("en-US", {timeZone: "America/New_York"});
+        var csvData = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+        var csvURL =  null;
+        if (navigator.msSaveBlob)
+        {
+            csvURL = navigator.msSaveBlob(csvData, ('Analytics' + newHoldDate + '.csv'));
+        }
+        else
+        {
+            csvURL = window.URL.createObjectURL(csvData);
+        }
+
+        var tempLink = document.createElement('a');
+        tempLink.href = csvURL;
+        
+        tempLink.setAttribute('download', (machine + '_Analytics_' + newHoldDate + '.csv'));
+        tempLink.click();
+    }
+</script>
+    
+</body>
+</html>
