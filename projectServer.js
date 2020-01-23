@@ -8,18 +8,6 @@ const PORT = 3000;
 const Project = require('./models/Projects');
 const cors = require('cors');
 
-
-//connec t to mongodb
-mongoose.connect(
-    keys.mongodb.dbURI, {
-        useUnifiedTopology: true,
-        useNewUrlParser: true
-    },
-    () => {
-        console.log('connected to mongodb');
-    }
-);
-
 app.use(express.static(__dirname + '/'));
 app.use(bodyParser.json());
 app.use(cors());
@@ -31,8 +19,7 @@ var password = keys.users.password;
 app.get('/projects', async (req, res) => {
     try {
         const proj = await Project.find();
-
-        res.render(JSON.parse(proj));
+        res.send(JSON.parse(proj));
     } catch (err) {
         res.json({
             message: err
@@ -40,11 +27,11 @@ app.get('/projects', async (req, res) => {
     }
 });
 
-
 app.post('/projects', async (req, res) => {
     const proj = new Project({
         projectId: req.body.projectId,
-        projectName: req.body.projectName
+        projectName: req.body.projectName,
+        resultCount: req.body.resultCount
     });
     console.log('adding project');
 
@@ -59,6 +46,16 @@ app.post('/projects', async (req, res) => {
     }
 });
 
+//connect to mongodb
+mongoose.connect(
+    keys.mongodb.dbURI, {
+        useUnifiedTopology: true,
+        useNewUrlParser: true
+    },
+    () => {
+        console.log('connected to mongodb');
+    }
+);
 
 app.listen(PORT, () => {
     console.log('app now listening to requests on 3000');
