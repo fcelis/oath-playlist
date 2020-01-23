@@ -136,7 +136,7 @@ var getTestPlans =
 
 function getTestPlansFunction(projId, startAt) {
     return 'https://alpine-electronics.jamacloud.com/rest/v1/testplans?project=' +
-        projId +
+        projectIdObj.idUpd +
         '&startAt=' +
         startAt +
         '&maxResults=50';
@@ -152,7 +152,7 @@ var getTestCycles =
 
 function getTestCyclesFunction(testPlanId, startAt) {
     return 'https://alpine-electronics.jamacloud.com/rest/v1/testplans/' +
-        testPlanId +
+        testPlanIdObj.idUpd +
         '/testcycles?startAt=' +
         startAt +
         '&maxResults=50';
@@ -168,7 +168,7 @@ var getTestRuns =
 
 function getTestRunsFunction(testCycleId, startAt) {
     return 'https://alpine-electronics.jamacloud.com/rest/v1/testcycles/' +
-        testCycleId +
+        testCycleIdObj.idUpd +
         '/testruns?startAt=' +
         startAt +
         '&maxResults=50';
@@ -199,27 +199,89 @@ app.post('/project/:testPlanId', (req, res) => {
     testPlanId = req.params.testPlanId;
 });
 
-app.post('/project/:testCycleId', (req, res) => {
-    testCycleId = req.params.testCycleId;
-});
+// not sure this is needed yet
+// app.post('/project/:testCycleId', (req, res) => {
+//     testCycleId = req.params.testCycleId;
+// });
 
 
 //get projects
 app.get('/projects', (req, res) => {
     try {
-        //doProjectRequest();
-        res.render(JSON.parse(holdProjects));
+        //send back all projects
+        res.send(holdProjects);
     } catch (err) {
 
     }
-
-    // send something back -- res.send()
 });
 
-//get request to start doProjectRequest()
+//GET testplans
+app.get('/testplans', (req, res) => {
+    try {
+        //sending back test plans
+        res.send(holdTestplans);
+    } catch (err) {
+
+    }
+});
+
+//POST testplans
+app.post('/testplans', (req, res) => {
+    try {
+        //send update to which test plan to use
+        getTestPlansFunction(req.body.project, 0);
+    } catch (err) {
+
+    }
+});
+
+//GET testcycles
+app.get('/testcycles', (req, res) => {
+    try {
+        //sending back test cycles
+        res.send(holdTestcycles);
+    } catch (err) {
+
+    }
+});
+
+//POST testcycles
+app.post('/testcycles', (req, res) => {
+    try {
+        //send update to which test cycle to use
+        getTestCyclesFunction(req.body.testplan, 0);
+    } catch (err) {
+
+    }
+});
+
+
+//GET test runs
+app.get('/testruns', (req, res) => {
+    try {
+        //sending back test runs
+        res.send(holdTestruns);
+    } catch (err) {
+
+    }
+});
+
+//POST testcycles
+app.post('/testruns', (req, res) => {
+    try {
+        //send update to which test cycle to use
+        getTestCyclesFunction(req.body.testcycle, 0);
+    } catch (err) {
+
+    }
+});
+
+
+
+
+//get request to start doProjectRequest() -- with default values
 app.get('/runproject', (req, res) => {
     doProjectRequest();
-    // send something back -- res.send()
 });
 
 //------------------- END REST ---------------//
@@ -371,26 +433,9 @@ function doTestRunRequest() {
                     }
                 }
                 console.log(holdTestruns);
-
-                // show test plan information
-                // console.log('-----Numbers below are cumulated from previous test cycle-----');
-                // console.log('testCycleId now is: ' + testCycleId);
-                // console.log('PASSED: ' + holdTestRunStatusPassed);
-                // console.log('FAILED: ' + holdTestRunStatusFailed);
-                // console.log('BLOCKED: ' + holdTestRunStatusBlocked);
-
-                //don't really need this below
-                //updateValues(holdTestRunStatusPassed, holdTestRunStatusFailed, holdTestRunStatusBlocked);
-
             }
         );
     }
-}
-
-function updateValues(a, b, c) {
-    holdTestRunStatusPassed = a;
-    holdTestRunStatusFailed = b;
-    holdTestRunStatusFailed = c;
 }
 
 app.listen(PORT, () => {
