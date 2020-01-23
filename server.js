@@ -1,6 +1,7 @@
 const express = require('express');
 const authRoutes = require('./routes/auth-routes');
 const app = express();
+const bodyParser = require('body-parser');
 const passportSetup = require('./config/passport-setup');
 const mongoose = require('mongoose');
 const keys = require('./config/keys');
@@ -8,6 +9,10 @@ const PORT = 3000;
 
 //set up view engine
 app.set('view engine', 'ejs');
+app.use(bodyParser.json()); // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({ // to support URL-encoded bodies
+    extended: true
+}));
 
 //connec t to mongodb
 mongoose.connect(
@@ -181,12 +186,11 @@ var auth = 'Basic ' + new Buffer(username + ':' + password).toString('base64');
 
 //-------------   express REST ----------------//
 //submits a post
-app.post('/project', (req, res) => {
-    projectId = req.body.projectId;
-    testPlanId = req.body.testPlanId;
-    // testCycleId = req.body.testCycleId;
-
-    doProjectRequest();
+app.post('/project/runall', (req, res) => {
+    projectIdObj.idUpd = req.body.projectId;
+    testPlanIdObj.idUpd = req.body.testPlanId;
+    testCycleIdObj.idUpd = req.body.testCycleId;
+    //doProjectRequest();
 });
 
 //submits a projectId
@@ -205,21 +209,31 @@ app.post('/project/:testPlanId', (req, res) => {
 // });
 
 
-//get projects
+//GET projects
 app.get('/projects', (req, res) => {
     try {
-        //send back all projects
-        res.send(holdProjects);
+        //execute get project request
+        doProjectRequest();
+        //send back all projects after small pause to get info into mem
+        setTimeout(() => {
+            res.send(holdProjects);
+        }, 1000);
+
     } catch (err) {
 
     }
 });
 
+
 //GET testplans
 app.get('/testplans', (req, res) => {
     try {
-        //sending back test plans
-        res.send(holdTestplans);
+        //execute test plan request with latest project
+        doTestPlanRequest();
+        //sending back test plans - wait for function above to execute
+        setTimeout(() => {
+            res.send(holdTestplans);
+        }, 1000);
     } catch (err) {
 
     }
@@ -229,7 +243,13 @@ app.get('/testplans', (req, res) => {
 app.post('/testplans', (req, res) => {
     try {
         //send update to which test plan to use
-        getTestPlansFunction(req.body.project, 0);
+        const holdIt = req.body.project;
+        console.log('testplan post:  ' + holdIt);
+
+        //getTestPlansFunction(JSON.parse(req.body.project), 0);
+        setTimeout(() => {
+            res.json(holdIt);
+        }, 200);
     } catch (err) {
 
     }
@@ -303,7 +323,7 @@ function ObjectLength(object) {
     return length;
 };
 
-doProjectRequest();
+//doProjectRequest();
 
 //return an object with project names and ids into holdProject object
 function doProjectRequest() {
@@ -330,7 +350,9 @@ function doProjectRequest() {
             }
             console.log(holdProjects);
             //after having projectId we doTestPlanRequest()
-            doTestPlanRequest();
+
+            //may have to do these function calls in the routes above
+            // doTestPlanRequest();
         }
     );
     // return holdProjects;
@@ -355,7 +377,9 @@ function doTestPlanRequest() {
                 };
             }
             console.log(holdTestplans);
-            doTestCycleRequest();
+
+            //may have to do these function calls in the routes above
+            // doTestCycleRequest();
         }
     );
 }
@@ -379,7 +403,9 @@ function doTestCycleRequest() {
             }
             console.log(holdTestcycles);
             //console.log('holdTestCyclesArray: ' + holdTestCyclesArray);
-            doTestRunRequest();
+
+            //may have to do these function calls in the routes above
+            // doTestRunRequest();
         }
     );
 }
@@ -387,12 +413,10 @@ function doTestCycleRequest() {
 //return an object with testcycle names and ids
 function doTestRunRequest() {
 
+    console.log('-------------------------------------------------------------------------------------');
     //clear out numbers in PASSED, FAILED, and BLOCKED first
     holdTestRuns = [];
-    console.log('In doTestRunRequest -- holdTestRuns contains: ' + holdTestRuns);
-    // holdTestRunStatusPassed = 0;
-    // holdTestRunStatusFailed = 0;
-    // holdTestRunStatusBlocked = 0;
+    // console.log('In doTestRunRequest -- holdTestRuns contains: ' + holdTestRuns);
 
     console.log('testCyclesArray is: ' + holdTestCyclesArray);
     //need to do request for each test cycleID
@@ -436,6 +460,8 @@ function doTestRunRequest() {
             }
         );
     }
+
+    console.log('-------------------------------------------------------------------------------------');
 }
 
 app.listen(PORT, () => {
