@@ -150,6 +150,7 @@ function getTestPlansFunction(projId, startAt) {
 		'&startAt=' +
 		startAt +
 		'&maxResults=50';
+	//return getTestPlans;
 }
 
 // 3 getTestCycles = returns test cycles -- how many cycles per release (testPlan), data[i].fields.name = "Cycle1", data[i].id = testCycleId
@@ -161,13 +162,12 @@ var getTestCycles =
 	'&maxResults=50';
 
 function getTestCyclesFunction(testPlanId, startAt) {
-	return (
+	getTestCycles =
 		'https://alpine-electronics.jamacloud.com/rest/v1/testplans/' +
-		testPlanIdObj.idUpd +
+		testPlanId +
 		'/testcycles?startAt=' +
 		startAt +
-		'&maxResults=50'
-	);
+		'&maxResults=50';
 }
 
 // 4 getTestRuns = returns list of testRunStatus per cycle for specific release -- data[i].fields.testRunStatus
@@ -179,13 +179,12 @@ var getTestRuns =
 	'&maxResults=50';
 
 function getTestRunsFunction(testCycleId, startAt) {
-	return (
+	getTestRuns =
 		'https://alpine-electronics.jamacloud.com/rest/v1/testcycles/' +
-		testCycleIdObj.idUpd +
+		testCycleId +
 		'/testruns?startAt=' +
 		startAt +
-		'&maxResults=50'
-	);
+		'&maxResults=50';
 }
 
 // use testCycleIds to get list of testRunStatus from getTestRuns  // this may be irrelavent
@@ -261,37 +260,54 @@ app.post('/testplans', (req, res) => {
 app.get('/testcycles', (req, res) => {
 	try {
 		//sending back test cycles
-		res.send(holdTestcycles);
+		doTestCycleRequest();
+		//sending back test plans - wait for function above to execute
+		setTimeout(() => {
+			res.send(holdTestcycles);
+		}, 1000);
 	} catch (err) {}
 });
 
 //POST testcycles
 app.post('/testcycles', (req, res) => {
 	try {
+		var holdTestplan = req.body.testplan;
+
+		console.log('Testplan submitted for next testcycle: ' + holdTestplan);
 		//send update to which test cycle to use
 		getTestCyclesFunction(req.body.testplan, 0);
+
+		setTimeout(() => {
+			res.json(holdTestplan);
+		}, 200);
 	} catch (err) {}
 });
 
 //GET test runs
 app.get('/testruns', (req, res) => {
 	try {
-		//sending back test runs
-		res.send(holdTestruns);
+		//sending back test cycles
+		doTestRunRequest();
+		//sending back test plans - wait for function above to execute
+		setTimeout(() => {
+			res.send(holdTestruns);
+		}, 1000);
 	} catch (err) {}
 });
 
 //POST testcycles
 app.post('/testruns', (req, res) => {
 	try {
-		//send update to which test cycle to use
-		getTestCyclesFunction(req.body.testcycle, 0);
-	} catch (err) {}
-});
+		var holdTestcycle = req.body.testcycle;
 
-//get request to start doProjectRequest() -- with default values
-app.get('/runproject', (req, res) => {
-	doProjectRequest();
+		console.log('Testcycle submitted for next testrun: ' + holdTestcycle);
+		//send update to which test cycle to use
+		getTestRunsFunction(req.body.testcycle, 0);
+
+		setTimeout(() => {
+			res.json(holdTestcycle);
+		}, 200);
+	} catch (err) {}
 });
 
 //------------------- END REST ---------------//
@@ -313,6 +329,23 @@ function ObjectLength(object) {
 }
 
 //doProjectRequest();
+
+//clearning out all arrays/obj functions
+//clear out holdTestPlans
+function emptlyHoldTestPlans() {
+	holdTestplans.length = 0;
+}
+
+//clear out holdTestCycles
+function emptlyHoldTestCycles() {
+	holdTestcycles.length = 0;
+	holdTestCyclesArray.length = 0;
+}
+
+//clear out holdTestruns
+function emptlyHoldTestruns() {
+	holdTestruns.length = 0;
+}
 
 //return an object with project names and ids into holdProject object
 function doProjectRequest() {
@@ -347,8 +380,7 @@ function doProjectRequest() {
 
 //return an object with testplan names and ids
 function doTestPlanRequest() {
-	holdTestPlans = [];
-	console.log('holdTestPlans contains: ' + holdTestPlans);
+	//console.log('holdTestPlans contains: ' + holdTestPlans);
 
 	request(
 		{
@@ -358,8 +390,11 @@ function doTestPlanRequest() {
 			}
 		},
 		function(error, response, body) {
-			var holdGetTestplans = JSON.parse(response.body);
 			//need to find way to clear out object
+			emptlyHoldTestPlans();
+
+			var holdGetTestplans = JSON.parse(response.body);
+			console.log('holdGetTestplans are: ' + holdGetTestplans);
 
 			for (i = 0; i < holdGetTestplans.data.length; i++) {
 				holdTestplans[i] = {
@@ -385,7 +420,12 @@ function doTestCycleRequest() {
 			}
 		},
 		function(error, response, body) {
+			emptlyHoldTestCycles();
+
 			var holdGetTestcycles = JSON.parse(response.body);
+
+			//need to find way to clear out object
+
 			for (i = 0; i < holdGetTestcycles.data.length; i++) {
 				holdTestcycles[i] = {
 					testcycle_name : holdGetTestcycles.data[i].fields.name,
@@ -406,52 +446,57 @@ function doTestCycleRequest() {
 function doTestRunRequest() {
 	console.log('-------------------------------------------------------------------------------------');
 	//clear out numbers in PASSED, FAILED, and BLOCKED first
-	holdTestRuns = [];
+	//holdTestRuns = [];
 	// console.log('In doTestRunRequest -- holdTestRuns contains: ' + holdTestRuns);
 
-	console.log('testCyclesArray is: ' + holdTestCyclesArray);
-	//need to do request for each test cycleID
-	for (i = 0; i < holdTestCyclesArray.length; i++) {
-		testCycleIdObj.idUpd = holdTestCyclesArray[i];
+	//console.log('testCyclesArray is: ' + holdTestCyclesArray);
 
-		console.log('amount in holdTestCycles -- # of testCycles:  ' + holdTestCyclesArray.length);
-		console.log('this is current test cycle: ' + holdTestCyclesArray[i]);
-		//itterate for each test cycleId
-
-		console.log('value of testCycleID:  ' + testCycleIdObj.idUpd);
-
-		request(
-			{
-				url     : getTestRunsFunction(testCycleIdObj.idUpd, 0),
-				headers : {
-					Authorization : auth
-				}
-			},
-			function(error, response, body) {
-				var holdGetTestruns = JSON.parse(response.body);
-
-				console.log('returned test runs:  ' + holdGetTestruns.data.length);
-
-				for (i = 0; i < holdGetTestruns.data.length; i++) {
-					holdTestruns[i] = {
-						testrun_name   : holdGetTestruns.data[i].fields.name,
-						testrun_id     : holdGetTestruns.data[i].id,
-						testrun_status : holdGetTestruns.data[i].fields.testRunStatus
-					};
-					if (holdGetTestruns.data[i].fields.testRunStatus == 'PASSED') {
-						holdTestRunStatusPassed += 1;
-					} else if (holdGetTestruns.data[i].fields.testRunStatus == 'FAILED') {
-						holdTestRunStatusFailed += 1;
-					} else if (holdGetTestruns.data[i].fields.testRunStatus == 'BLOCKED') {
-						holdTestRunStatusBlocked += 1;
-					}
-				}
-				console.log(holdTestruns);
+	request(
+		{
+			// url     : getTestRunsFunction(testCycleIdObj.idUpd, 0),
+			url     : getTestRuns,
+			headers : {
+				Authorization : auth
 			}
-		);
-	}
+		},
+		function(error, response, body) {
+			//clear out testruns from previous reqest
+			emptlyHoldTestruns();
+
+			holdTestRunStatusPassed = 0;
+			holdTestRunStatusFailed = 0;
+			holdTestRunStatusBlocked = 0;
+
+			var holdGetTestruns = JSON.parse(response.body);
+
+			console.log('returned test runs:  ' + holdGetTestruns.data.length);
+
+			for (i = 0; i < holdGetTestruns.data.length; i++) {
+				holdTestruns[i] = {
+					testrun_name   : holdGetTestruns.data[i].fields.name,
+					testrun_id     : holdGetTestruns.data[i].id,
+					testrun_status : holdGetTestruns.data[i].fields.testRunStatus
+				};
+				if (holdGetTestruns.data[i].fields.testRunStatus == 'PASSED') {
+					holdTestRunStatusPassed += 1;
+				} else if (holdGetTestruns.data[i].fields.testRunStatus == 'FAILED') {
+					holdTestRunStatusFailed += 1;
+				} else if (holdGetTestruns.data[i].fields.testRunStatus == 'BLOCKED') {
+					holdTestRunStatusBlocked += 1;
+				}
+			}
+			console.log(holdTestruns);
+			testResults();
+		}
+	);
 
 	console.log('-------------------------------------------------------------------------------------');
+}
+
+function testResults() {
+	console.log('Testrun Status Passed: ' + holdTestRunStatusPassed);
+	console.log('Testrun Status Failed: ' + holdTestRunStatusFailed);
+	console.log('Testrun Status Blocked: ' + holdTestRunStatusBlocked);
 }
 
 app.listen(PORT, () => {
