@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <!-- <link rel="stylesheet" href="http://54.213.65.177:3004/css/style.css"> -->
     <script defer src="https://use.fontawesome.com/releases/v5.8.2/js/regular.js" integrity="sha384-iFYyWQkY/Zvsdq3IIxRJI2FBoXPj6g73ok7rIH3sZGulA7E5PvFqB5BOELomUuyh" crossorigin="anonymous"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.8.2/js/fontawesome.js" integrity="sha384-Ia7KZbX22R7DDSbxNmxHqPQ15ceNzg2U4h5A8dy3K47G2fV1k658BTxXjp7rdhXa" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -47,9 +46,13 @@
     <script>
 
     let projectNames = [];
+    let projectIds = [];
+
     let project;
     //this will be address of api
     let fetchAddress;
+    var $projectChoice =  $("#project-choice");
+    var $secondChoice =  $("#second-choice");
 
     </script>
  </head>
@@ -63,7 +66,10 @@
         <form style="text-align: left; margin-left: 60px;" > 
             <!-- <span>Choose Project:&nbsp;&nbsp;</span> -->
             <!-- onChange="window.document.location.href=this.options[this.selectedIndex].value;"  -->
-            <select id="first-choice" class="btn btn-primary dropdown-toggle">
+            <table><tr>
+                <td>JAMA Project:</td>
+            </tr></table>
+            <select id="project-choice" class="btn btn-primary dropdown-toggle">
                 <option selected value="base">- Project - </option>
             </select>&nbsp;
             
@@ -77,37 +83,46 @@
         
         //on document load, bring up the various machine_ids we can choose between
         $(document).ready(function() {
-            getAuth();
+            // getAuth();
             //make server that will find all unique projects - CREATE ROUTE FOR FINDING PROJECTS
-            $.getJSON("http://54.213.65.177:3004/posts/machine/machine_ids", async function(data) {
+            $.getJSON("http://localhost:3000/projects", async function(data) {
 
                 // will need to cycle through route to get only project names = UNIQUE PROJECTS
                 //console.log(data);
                 await $.each(data, function(index, value) {
-                    console.log(value + ' project was added...');
+                    console.log(value.project_name + ' project was added...');
                     // projects.push(value);  --not used yet
 
                     //give uniuqe project names for dropdown
-                    projectNames.push('Project_'+ value );
-                });
+                    projectNames.push(value.project_name );
+                    projectIds.push(value.project_id );
 
+                    //$projectChoice.append("<option>" + value.project_name + "</option>"); 
+                });
+                console.log("projectNames is: "+ projectNames);
                 
                 //populate the dropdown
                 for(i=0; i<projectNames.length; i++){                    
                     if(projectNames[i] != undefined){
-                        $firstChoice.append("<option>" + projectNames[i] + "</option>"); 
+                        $('#project-choice').append('<option value="' + projectIds[i] + '">' + projectNames[i] + '</option>');
+                        //$projectChoice.append('<option value='+ projectIds[i] + '>' + projectNames[i] + '</option>'); 
+                        console.log('adding projectChoice');
                     }
                 }
             });
         });
 
+        
+
         //dropdown for selecting board for data
-        $("#first-choice").change(function() {
-            var holdDropdownVal = document.getElementById("first-choice");
+        $("#project-choice").mouseup(function() {
+            var holdDropdownVal = document.getElementById("project-choice");
+            console.log('holdDropdownVal is: '+ holdDropdownVal);
             //need to slice out the value from the dropdowns - 102219 removed regExp 
             //var regExp = /\(([^)]+)\)/;
-
+            console.log('holdDropdownVal.options[holdDropdownVal.selectedIndex].value: '+ holdDropdownVal.options[holdDropdownVal.selectedIndex].value);
             //machine = regExp.exec(holdDropdownVal.options[holdDropdownVal.selectedIndex].text)[1];
+            holdDropdownVal.options[holdDropdownVal.selectedIndex].value;
             project = holdDropdownVal.options[holdDropdownVal.selectedIndex].value;
             project = project.split("_").pop();
             
@@ -120,22 +135,22 @@
             
 
             //will revisit this LATER
-            apiGetAll(project);
+           // apiGetAll(project);
         });
 
         
         
-        function getAuth(){
-            $.ajax({
-                type: 'POST',
-                url: 'https://alpine-electronics.jamacloud.com/rest/oauth/token',
-                data: {},
-                crossDomain: true,
-                beforeSend: function(xhr) {
-                    xhr.setRequestHeader('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(mrosik + ':' + Makalaka123))))
-                }
-            });
-        }
+        // function getAuth(){
+        //     $.ajax({
+        //         type: 'POST',
+        //         url: 'https://alpine-electronics.jamacloud.com/rest/oauth/token',
+        //         data: {},
+        //         crossDomain: true,
+        //         beforeSend: function(xhr) {
+        //             xhr.setRequestHeader('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(mrosik + ':' + Makalaka123))))
+        //         }
+        //     });
+        // }
         
         //apiGetAll(machine_id);
         function apiGetAll(yo){
