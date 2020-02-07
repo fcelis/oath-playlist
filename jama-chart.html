@@ -48,30 +48,76 @@
     let projectNames = [];
     let projectIds = [];
 
+    let testplanNames = [];
+    let testplanIds = [];
+
+    let holdTpId;
+    let testplanVal;
+    let testcycleVal;
+
+    let testplansTotal = 0;
+    let testcyclesTotal = 0;
+    let testrunsTotal = 0;
+
+    let testcycleNames = [];
+    let testcycleIds = [];
+
+    let testrunPassed = 0;
+    let testrunFailed = 0;
+    let testrunBlocked = 0;
+
     let project;
+    let projectObject = {};
+    let testplansObject = {};
+    let testcyclesObject = {};
+
+    let holdTestplans;
+
     //this will be address of api
     let fetchAddress;
     var $projectChoice =  $("#project-choice");
-    var $secondChoice =  $("#second-choice");
+    var $testplanChoice =  $("#testplan-choice");
+    var $testcycleChoice =  $("#testcycle-choice");
+    let serverUrl = 'http://localhost:3000';
 
     </script>
  </head>
 
 <body>
     <div id="container" style="width: 100%">
-        <img src="Alpine.png" style="margin-left: 50px;padding:8px; background-color:white;  text-align: center;"/> <hr>
+       
+        <img src="Alpine.png" style="margin-left: 50px;padding:8px; padding-top: 20px; background-color:white;  text-align: center;"/> 
+        <hr>
         <p style="text-align: left; background-color: white; margin-left: 60px;" class="h3">
-           <span> JAMA Results </span>
+           <span style="font-family: Arial, Helvetica, sans-serif;"> JAMA Results - Pass/Fail/Blocked </span>
         </p> 
         <form style="text-align: left; margin-left: 60px;" > 
-            <!-- <span>Choose Project:&nbsp;&nbsp;</span> -->
-            <!-- onChange="window.document.location.href=this.options[this.selectedIndex].value;"  -->
-            <table><tr>
-                <td>JAMA Project:</td>
-            </tr></table>
-            <select id="project-choice" class="btn btn-primary dropdown-toggle">
-                <option selected value="base">- Project - </option>
-            </select>&nbsp;
+            
+            <table style="width: 100%;">
+                <tr>
+                    <td  style="text-align: left; margin-left: 60px;" >Choose Your Project: </td>
+                    <td  style="text-align: left; margin-left: 60px;">Test Plan: </td>
+                    <td  style="text-align: left; margin-left: 60px;">Test Cycle: </td>
+                </tr>
+                <tr>
+                    <td>
+                        <select id="project-choice" class="btn btn-primary dropdown-toggle">
+                            <option selected value="base">- Project - </option>
+                        </select>&nbsp;
+                    </td>
+                    <td>
+                        <select id="testplan-choice" class="btn btn-primary dropdown-toggle">
+                            <option selected value="base">- Test Plan - </option>
+                        </select>&nbsp;
+                    </td>
+                    <td>
+                        <select id="testcycle-choice" class="btn btn-primary dropdown-toggle">
+                            <option selected value="base">- Test Cycle - </option>
+                        </select>&nbsp;
+                    </td>
+                </tr>
+            </table>
+            
             
         </form>
                 
@@ -80,24 +126,44 @@
     </div>
     
     <script>
+        //clear out projects
+        function emptlyHoldProjects() {
+           projectNames.length = 0;
+            projectIds.length = 0;
+        }
+
+        //clear out holdTestPlans
+        function emptyHoldTestPlans() {
+            testplanNames.length = 0;
+            testplanIds.length = 0;
+        }
+
+        //clear out holdTestCycles
+        function emptyHoldTestCycles() {
+            testcycleNames.length = 0;
+            testcycleIds.length = 0;
+        }
+
+        //clear out holdTestruns
+        function emptyHoldTestruns() {
+            //holdTestruns.length = 0;
+        }
+
         
         //on document load, bring up the various machine_ids we can choose between
         $(document).ready(function() {
-            // getAuth();
             //make server that will find all unique projects - CREATE ROUTE FOR FINDING PROJECTS
-            $.getJSON("http://localhost:3000/projects", async function(data) {
+            $.getJSON(serverUrl+"/projects", async function(data) {
 
                 // will need to cycle through route to get only project names = UNIQUE PROJECTS
                 //console.log(data);
                 await $.each(data, function(index, value) {
                     console.log(value.project_name + ' project was added...');
-                    // projects.push(value);  --not used yet
-
-                    //give uniuqe project names for dropdown
+                    
+                    //give uniuqe project names for dropdown - send to array
                     projectNames.push(value.project_name );
                     projectIds.push(value.project_id );
 
-                    //$projectChoice.append("<option>" + value.project_name + "</option>"); 
                 });
                 console.log("projectNames is: "+ projectNames);
                 
@@ -105,54 +171,327 @@
                 for(i=0; i<projectNames.length; i++){                    
                     if(projectNames[i] != undefined){
                         $('#project-choice').append('<option value="' + projectIds[i] + '">' + projectNames[i] + '</option>');
-                        //$projectChoice.append('<option value='+ projectIds[i] + '>' + projectNames[i] + '</option>'); 
-                        console.log('adding projectChoice');
+                        //console.log('adding projectChoice to dropdown');
                     }
                 }
+
+                setTimeout( () => {
+                   // getTestplanDropdown();
+                }, 100);
             });
         });
 
-        
+        function getTestplanDropdown(){
+            console.log('populating testplan dropdown');
+            $.getJSON(serverUrl+"/testplans", async function(data) {
+            
+            // will need to cycle through route to get only project names = UNIQUE PROJECTS
+            //console.log(data);
+            await $.each(data, function(index, value) {
+                console.log(value.testplan_name + ' testplan was added...');
+                
+                //give uniuqe project names for dropdown - send to array
+                testplanNames.push(value.testplan_name );
+                testplanIds.push(value.testplan_id );
+
+                // console.log('projectObject: '+projectObject);
+
+
+                });
+                console.log("testplanNames is: "+ testplanNames);
+                $('#testplan-choice').empty();
+                $('#testplan-choice').append('<option value="base">' + "- Test Plan -" + '</option>');
+                //populate the dropdown
+                for(i=0; i<testplanNames.length; i++){                    
+                    if(testplanNames[i] != undefined){
+                        
+                        $('#testplan-choice').append('<option value="' + testplanIds[i] + '">' + testplanNames[i] + '</option>');
+                        //console.log('adding projectChoice to dropdown');
+                    }
+                }
+            });
+        }
+
+        function getTestcycleDropdown(){
+            console.log('populating testcycle dropdown');
+            $.getJSON(serverUrl+"/testcycles", async function(data) {
+            
+            //console.log(data);
+            await $.each(data, function(index, value) {
+                console.log(value.testcycle_name + ' testcycle was added...');
+                
+                //give uniuqe project names for dropdown - send to array
+                testcycleNames.push(value.testcycle_name );
+                testcycleIds.push(value.testcycle_id );
+
+                });
+                console.log("testcycleNames is: "+ testcycleNames);
+                $('#testcycle-choice').empty();
+                $('#testcycle-choice').append('<option value="base">' + "- Test Cycle -" + '</option>');
+                //populate the dropdown
+                for(i=0; i<testcycleNames.length; i++){                    
+                    if(testcycleNames[i] != undefined){
+                        
+                        $('#testcycle-choice').append('<option value="' + testcycleIds[i] + '">' + testcycleNames[i] + '</option>');
+                        // getTestcycleDropdown call next()
+                    }
+                }
+            });
+        }
 
         //dropdown for selecting board for data
-        $("#project-choice").mouseup(function() {
+        $("#project-choice").change(function() {
             var holdDropdownVal = document.getElementById("project-choice");
-            console.log('holdDropdownVal is: '+ holdDropdownVal);
-            //need to slice out the value from the dropdowns - 102219 removed regExp 
-            //var regExp = /\(([^)]+)\)/;
-            console.log('holdDropdownVal.options[holdDropdownVal.selectedIndex].value: '+ holdDropdownVal.options[holdDropdownVal.selectedIndex].value);
-            //machine = regExp.exec(holdDropdownVal.options[holdDropdownVal.selectedIndex].text)[1];
+            
             holdDropdownVal.options[holdDropdownVal.selectedIndex].value;
             project = holdDropdownVal.options[holdDropdownVal.selectedIndex].value;
-            project = project.split("_").pop();
+           
+            emptyHoldTestPlans();
+            emptyHoldTestCycles();
+            emptyHoldTestruns();
+
+            console.log('project chosen --> '+ project);
+
+            //run post on getTestPanInfo(project) then call the GET on getTestplanDropdown()
+            getTestPlanInfo(project);
+            getTestplanDropdown();
+        });
+
+        //dropdown for selecting testplans
+        $("#testplan-choice").change(function() {
+            var holdTpDropdownVal = document.getElementById("testplan-choice");
+            
+            holdTpDropdownVal.options[holdTpDropdownVal.selectedIndex].value;
+            testplanVal = holdTpDropdownVal.options[holdTpDropdownVal.selectedIndex].value;
+            //project = project.split("_").pop();
             
             //var matches = regExp.exec(machine);
+            //empty arrays before switching to next project chosen
+            emptyHoldTestPlans();
+            emptyHoldTestCycles();
+            emptyHoldTestruns();
 
-            console.log('project chosen --> '+project);
+            console.log('testplan chosen --> '+ testplanVal);
             
+            postTestCycles(testplanVal);
+            runGetTestCycles();
+            getTestcycleDropdown();
+
             //var holdSecondDropdownVal = document.getElementById("second-choice");
             //holdSecondDropdownVal.options[value="0"];   
-            
 
             //will revisit this LATER
            // apiGetAll(project);
         });
 
-        
-        
-        // function getAuth(){
-        //     $.ajax({
-        //         type: 'POST',
-        //         url: 'https://alpine-electronics.jamacloud.com/rest/oauth/token',
-        //         data: {},
-        //         crossDomain: true,
-        //         beforeSend: function(xhr) {
-        //             xhr.setRequestHeader('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(mrosik + ':' + Makalaka123))))
-        //         }
-        //     });
-        // }
+        //dropdown for selecting test cycles
+        $("#testcycle-choice").change(function() {
+            var holdTestcycleDropdownVal = document.getElementById("testcycle-choice");
+            
+            holdTestcycleDropdownVal.options[holdTestcycleDropdownVal.selectedIndex].value;
+            testcycleVal = holdTestcycleDropdownVal.options[holdTestcycleDropdownVal.selectedIndex].value;
+            
+            emptyHoldTestPlans();
+            emptyHoldTestCycles();
+            emptyHoldTestruns();
+
+            
+            console.log('testcycle chosen --> '+ testcycleVal);
+            
+        });
+
+        //this will become call for chart...
+        function getTestPlanInfo(projectId){
+            
+            console.log("getTestPlanInfo() function initiated...for "+ projectId);
+            
+            try{
+                $.post(serverUrl+"/testplans", 
+                {"project": projectId}, 
+                () => {
+                    console.log('POST to /testplans with projectId');
+                    //next run the get /testplans function to retrieve back all values
+                    
+                    //will runChosenTestplan() after we get back values from testplans
+                    runChosenTestplan();
+                   // $.get(serverUrl+"/testruns", async (data) => {});
+                });
+            } catch(err) {
+
+            }   
+
+            //get test cycles for each test plan 
+
+            //use ids from each cycle to do testrun requests
+
+
+        } // end of getTestPlanInfo //////////////////////////////////////////////////////////////////////////////////////////////////
+
+        function runChosenTestplan(){
+            //console.log('runChosenTestPlan function: ');
+            testplansTotal = 0;
+            emptyHoldTestPlans();
+            testplanNames.length = 0;
+            testplanIds.length = 0;
+
+            $.get(serverUrl+"/testplans", async (data) => {
+               
+                // for(var i=0; i<data.length; i++){
+                //     console.log('data.length is : '+ data.length);        
+                // }
+                // testplansObject = data.reduce(function(prev, curr){
+                //         prev[curr.key] = curr.value;
+                //         return prev;
+                //     }, {});
+
+                //console.log('holdTestPlansObject ---- ' + data);
+                
+                await data.forEach((item) => {
+
+
+                    //count testplans to run callback after all processed
+                    testplansTotal++;
+
+                    testplanNames.push(item.testplan_name );
+                    testplanIds.push(item.testplan_id );
+
+                    //console.log('testplansObject: '+ testplansObject);
+                   
+                    console.log("Number of testplans for this project is: "+data.length);
+                    
+                    holdItem = item;
+                    
+                    if(testplansTotal === data.length){
+                        //runChosenTestcycles on callback
+                        console.log('in runChosenTestPlan() '+ testplanNames);
+                        //run a POST to testcycles first
+                        postChosenTestcycles();
+                        // do this after POSTrunChosenTestcycles();
+                    }
+                });
+            });
+        }
+
+        function postChosenTestcycles(){
+            console.log('in postChosenTestCycles()');
+            
+            // for(i=0; i<testplanIds.length; i++){
+                
+            //     holdTpId = testplanIds[i];
+            //     console.log('testplanIds currently is: '+ holdTpId);
+
+            //    // postTestCycles();
+            // }
+            testplanIds.forEach((thing) => {
+                holdTpId = thing;
+                console.log('testplanIds currently is: '+ holdTpId);
+            })
+
+        }
+
+        function postTestCycles(tp){
+            $.post(serverUrl+"/testcycles", 
+                {"testplan": tp}, 
+                () => {
+                    //now need to run GET /testcycles to push result to another obj/array
+                    console.log('--> running runGetTestCycles next ');
+                    //runGetTestCycles();
+                    //runGetTestCycles();  <<-- this caused the duplicates
+                });
+        }
+
+        function runGetTestCycles(){
+            console.log('in runGetTestCycles() ');
+            $.get((serverUrl+"/testcycles"), async (data) => {
+                 
+                 await data.forEach((item) => {
+                     //count testplans to run callback after all processed
+                     console.log('project: '+ project + ' holdTpId is: ' + holdTpId + ' item.testcycle_name is: ' + item.testcycle_name);
+                     testcycleNames.push(item.testcycle_name);
+                     testcycleIds.push(item.testcycle_id);   
+                     console.log('all testcycleIds are: '+testcycleIds); 
+
+                 });
+             });
+        }
+
+        function runChosenTestcycles(){
+            console.log('runChosenTestcycles function() -- stuff currently in testplanNames/testplanIds: '+ testplanNames);
+            testcyclesTotal = 0;
+            //need to get all testcycles per testplan chosen -- make object with {testplan: {testcycle1, testcycle2...}, testplan2: {...}...}
+            //get /testcycles
+            //------------------->>>> do for each testplan a testcycle GET request
+ 
+            //may need to do a POST with testplanIds then a GET to get results
+            //may need to remove this for loop and make a GET call or multiple get calls for each testplanIds
+            for(let i=0; i < testplanIds.length; i++){
+
+                console.log('testplanName: ' + testplanNames[i]);
+                console.log('testplanId: ' + testplanIds[i]);
+                testcyclesTotal++;
+
+                holdTpId = testplanIds[i];
+                console.log('holdTpId is: '+ holdTpId);
+
+                $.get((serverUrl+"/testcycles/"+holdTpId), async (data) => {
+                 
+                    await data.forEach((item) => {
+                        //count testplans to run callback after all processed
+                        console.log('holdTpId is: ' + holdTpId + ' item.testcycle_name is: ' + item.testcycle_name);
+                        
+                        testcycleNames.push(item.testcycle_name);
+                        testcycleIds.push(item.testcycle_id);    
+                        
+                    });
+                });
+                
+            }
+            // if(testcyclesTotal === testplanIds.length){
+            //                 //need to POST what testplan was chosen to server to get testcycles
+            //                 console.log('testcyclesTotal === testplanIds.length HAPPENED');
+            //                 runChosenTestruns();
+            //             }
+            
+        }
+
+        function runChosenTestruns(){
+
+            console.log('in runChosenTestcycles() -- testcyclenames: '+ testcycleNames);
+            console.log('in runChosenTestcycles() -- testcycleIds: '+ testcycleIds);
+            console.log('number of testcycles total for all testplans: '+ testcycleNames.length);
+            
+            console.log('runChosenTestruns function() -- need to now get PASSED/FAILED/BLOCKED...');
+            testrunsTotal = 0;
+            //get /testruns -- getting passed failed blocked per test cycle
+            $.get(serverUrl+"/testruns", async (data) => {
+                await data.forEach((item) => {
+                    //count testplans to run callback after all processed
+                    testrunsTotal++;
+
+                    //need to count pass/fail/blocked now
+                    
+                    // testcycleNames.push(item.testcycle_name );
+                    // testcycleIds.push(item.testcycle_id );
+                    // console.log(data.length);
+                    
+
+                    //console.log('in runChosenTestruns() '+ testcycleNames);
+                    if(testrunsTotal === data.length){
+                        runChart();
+                    }
+                });
+            });
+        }
+
+
+        function runChart(){
+            console.log('-- runChart --');
+        }
+
+
         
         //apiGetAll(machine_id);
+        //function to run the map plotting below -----------------------------------------------------------------------------------//
         function apiGetAll(yo){
             try {
                 console.log('in apiGetAll() -- getting project data');
