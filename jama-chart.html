@@ -93,7 +93,14 @@
     let $failedNumber = $("#failedNumber");
     let $blockedNumber = $("#blockedNumber");
     let $notrunNumber = $("#notrunNumber");
+    
+    var testplanName;
+    var testcycleName;
+    var projectName;
 
+    var projectN;
+    var testcycleN;
+    var testplanN;
     </script>
  </head>
 
@@ -105,12 +112,12 @@
         <p style="text-align: left; background-color: white; margin-left: 60px;" class="h3">
            <span style="font-family: Arial, Helvetica, sans-serif;"> JAMA API - Test Run Results - Per Chosen Test Cycle </span>
         </p> <br />
-        <form style="text-align: left; margin-left: 60px;" > 
+        <form style="text-align: center; ;" > 
             <table style="width: 100%;">
                 <tr>
-                    <td  style="text-align: left; width: 34%;" >Choose Project: </td>
-                    <td  style="text-align: left; width: 33%;">Choose Test Plan: </td>
-                    <td  style="text-align: left; width: 33%;">Choose Test Cycle: </td>
+                    <td  style="text-align: center; width: 34%;" >Choose Project: </td>
+                    <td  style="text-align: center; width: 33%;">Choose Test Plan: </td>
+                    <td  style="text-align: center; width: 33%;">Choose Test Cycle: </td>
                 </tr>
                 <tr>
                     <td>
@@ -129,80 +136,125 @@
                         </select>&nbsp;
                     </td>
                 </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td valign="top">
+                        <span class="h4" style="color: lightgray;"> Project: </span> 
+                        <span class="h4" id="projectN" style="color: #007bff; "> Project Name</span> 
+                        <br />
+                    </td>
+                    <td valign="top">
+                        <span class="h4" style="color: lightgray;"> Test Plan: </span> 
+                        <span class="h4" id="testplanN" style="color: #007bff;"> Test Plan Name</span>
+                        <br />
+                    </td>
+                    <td valign="top">
+                        <span class="h4" style="color: lightgray;"> Test Cycle: </span> 
+                        <span class="h4" id="testcycleN" style="color: #007bff;"> Test Cycle Name</span>
+                        <br />  
+                    </td>
+                </tr>
 
                 
             </table>
             
             
         </form>
-        
-        <br /> <br />
-        <h4 style="width: 100%; text-align: left; margin-left: 60px; margin-bottom: -15px;"><span id="testrunsTotal">#</span> Testruns Total </h4>  <br /> 
-        <table style="width:500px; text-align: left; margin-left: 60px; border-top:1pt solid grey; padding-bottom: 20px;">  
+       
+         
+             
+        <table class="table table-bordered">   
+            <!-- <tr>
+                <p style="width: 100%; text-align: center;font-size:x-large; ">
+                    <span class="p" id="testrunsTotal" style="color: #007bff; ">#</span> 
+                     <span> Testruns Total </span>
+                      
+                  </p> 
+            </tr> -->
+            <tr>
+                <td style="width: 30%; text-align: center; ">
+                    
+                    <h5 class="passed-amount">
+                        <span id="testrunsTotal"  style="color: #007bff;">#</span>
+                    </h5>
+                </td >
+                <td  style="text-align: center; width: 33%; color: #007bff;">                    
+                    <h5>
+                        TOTAL
+                    </h5>
+                </tdstyle="width:>
+                <td style="text-align: center; width: 33%; color: #007bff;">
+                    <h5 class="passed-amount-percent">
+                        <span id="totalPercent">100%</span>
+                    </h5>
+                </td>
+            </tr>
            <tr>
-                <td style="width: 30%; text-align: center; margin-left: 60px;">
+                <td style="width: 30%; text-align: center; ">
                     
                     <h5 class="passed-amount">
                         <span id="passedNumber">#</span>
                     </h5>
                 </td >
-                <td  style="text-align: center; margin-left: 60px;width: 33%">                    
+                <td  style="text-align: center; width: 33%">                    
                     <h5>
                         PASSED
                     </h5>
                 </tdstyle="width:>
-                <td style="text-align: center; margin-left: 60px;width: 33%">
+                <td style="text-align: center; width: 33%">
                     <h5 class="passed-amount-percent">
                         <span id="passedPercent">%</span>
                     </h5>
                 </td>
             </tr>
             <tr>
-                <td style="text-align: center; margin-left: 60px;width: 33%">
+                <td style="text-align: center; width: 33%">
                     <h5 class="failed-amount">
                         <span id="failedNumber">#</span>
                     </h5>
                 </td>
-                <td style="text-align: center; margin-left: 60px;width: 33%;">
+                <td style="text-align: center; width: 33%;">
                     <h5>
                         FAILED
                     </h5 >    
                 </td>
-                <td style="text-align: center; margin-left: 60px;width: 33%">
+                <td style="text-align: center; width: 33%">
                     <h5 class="failed-amount-percent">
                         <span id="failedPercent">%</span>
                     </h5>
                 </td>
             </tr>
             <tr>
-                <td  style="text-align: center; margin-left: 60px;width: 33%">
+                <td  style="text-align: center; width: 33%">
                     <h5 class="blocked-amount">
                         <span id="blockedNumber">#</span>
                     </h5>
                 </td>
-                <td style="text-align: center; margin-left: 60px;width: 33%;">
+                <td style="text-align: center; width: 33%;">
                     <h5>
                         BLOCKED
                     </h5>
                 </td>
-                <td  style="text-align: center; margin-left: 60px;width: 33%">
+                <td  style="text-align: center; width: 33%">
                     <h5 class="blocked-amount-percent">
                         <span id="blockedPercent">%</span>
                     </h5>
                 </td>
             </tr>
             <tr>
-                <td  style="text-align: center; margin-left: 60px;width: 33%">
+                <td  style="text-align: center; width: 33%">
                     <h5 class="notrun-amount">
                         <span id="notrunNumber">#</span>
                     </h5>
                 </td>
-                <td style="text-align: center; margin-left: 60px;width: 33%;">
+                <td style="text-align: center; width: 33%;">
                     <h5>
                         NOT RUN
                     </h5>
                 </td>
-                <td  style="text-align: center; margin-left: 60px;width: 33%">
+                <td  style="text-align: center; width: 33%">
                     <h5 class="notrun-amount-percent">
                         <span id="notrunPercent">%</span>
                     </h5>
@@ -288,6 +340,7 @@
 
                 });
                 console.log("testplanNames is: "+ testplanNames);
+                //currentTestplanName = testplanNames;
                 $('#testplan-choice').empty();
                 $('#testplan-choice').append('<option value="base">' + "- Test Plan -" + '</option>');
                 //populate the dropdown
@@ -340,16 +393,19 @@
             
             holdDropdownVal.options[holdDropdownVal.selectedIndex].value;
             project = holdDropdownVal.options[holdDropdownVal.selectedIndex].value;
+            projectN = holdDropdownVal.options[holdDropdownVal.selectedIndex],name;
            
             emptyHoldTestPlans();
             emptyHoldTestCycles();
             emptyHoldTestruns();
 
             console.log('project chosen --> '+ project);
+            projectName = projectN;
 
             //run post on getTestPanInfo(project) then call the GET on getTestplanDropdown()
             getTestPlanInfo(project);
             getTestplanDropdown();
+            $('#projectN').html(projectN)
         });
 
         //dropdown for selecting testplans
@@ -358,6 +414,7 @@
             
             holdTpDropdownVal.options[holdTpDropdownVal.selectedIndex].value;
             testplanVal = holdTpDropdownVal.options[holdTpDropdownVal.selectedIndex].value;
+            testplanN = holdTpDropdownVal.options[holdTpDropdownVal.selectedIndex],name;
             //project = project.split("_").pop();
             
             //var matches = regExp.exec(machine);
@@ -365,12 +422,16 @@
             emptyHoldTestPlans();
             emptyHoldTestCycles();
             emptyHoldTestruns();
+            testplanName = testplanN;
 
             console.log('testplan chosen --> '+ testplanVal);
             
             postTestCycles(testplanVal);
             runGetTestCycles();
             getTestcycleDropdown();
+
+            
+            $('#testplanN').html(testplanN);
 
             //RUN A Chart call now
            // apiGetAll(project);
@@ -382,17 +443,21 @@
             
             holdTestcycleDropdownVal.options[holdTestcycleDropdownVal.selectedIndex].value;
             testcycleVal = holdTestcycleDropdownVal.options[holdTestcycleDropdownVal.selectedIndex].value;
-            
+            testcycleN = holdTestcycleDropdownVal.options[holdTestcycleDropdownVal.selectedIndex],name;
+
             emptyHoldTestPlans();
             emptyHoldTestCycles();
             emptyHoldTestruns();
 
+            testcycleName = testcycleN;
             
             console.log('testcycle chosen --> '+ testcycleVal);
             postTestruns(testcycleVal);
             //run call to calculate all passed/failed/blocked/not run for each test cycle then show it on a table 
             runChosenTestruns();
             //getResults();
+            
+            $('#testcycleN').html(testcycleN);
         });
 
         //this will become call for chart...
@@ -601,16 +666,19 @@
             console.log('-- runTotals --');
             console.log('Testruns Total: '+ testrunsTotal + ', Amount Passed: '+ numberOfTestRunsPassed + ', Amount Failed: '+ numberOfTestRunsFailed + ', Amount Blocked: '+ numberOfTestRunsBlocked + ', Amount Not Run: ' + numberOfTestRunsNotRun);
             //now runChart to make chart of data
-            $('#testrunsTotal').text(numberOfTestRuns);
-            $('#passedNumber').text(numberOfTestRunsPassed);
-            $('#failedNumber').text(numberOfTestRunsFailed);
-            $('#blockedNumber').text(numberOfTestRunsBlocked);
-            $('#notrunNumber').text(numberOfTestRunsNotRun);
+
+            
+
+            $('#testrunsTotal').html(numberOfTestRuns);
+            $('#passedNumber').html(numberOfTestRunsPassed);
+            $('#failedNumber').html(numberOfTestRunsFailed);
+            $('#blockedNumber').html(numberOfTestRunsBlocked);
+            $('#notrunNumber').html(numberOfTestRunsNotRun);
            
             $('#passedPercent').html(Math.round((numberOfTestRunsPassed/numberOfTestRuns)*100) + '%');
-            $('#failedPercent').text(Math.round((numberOfTestRunsFailed/numberOfTestRuns)*100) + '%');
-            $('#blockedPercent').text(Math.round((numberOfTestRunsBlocked/numberOfTestRuns)*100) + '%');
-            $('#notrunPercent').text(Math.round((numberOfTestRunsNotRun/numberOfTestRuns)*100) + '%');
+            $('#failedPercent').html(Math.round((numberOfTestRunsFailed/numberOfTestRuns)*100) + '%');
+            $('#blockedPercent').html(Math.round((numberOfTestRunsBlocked/numberOfTestRuns)*100) + '%');
+            $('#notrunPercent').html(Math.round((numberOfTestRunsNotRun/numberOfTestRuns)*100) + '%');
             runChart();
         }
         function runChart(){
