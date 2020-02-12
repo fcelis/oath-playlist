@@ -14,16 +14,15 @@ app.use(cors());
 app.use(
 	bodyParser.urlencoded({
 		// to support URL-encoded bodies
-		extended : true
+		extended: true
 	})
 );
 
 //connec t to mongodb
 mongoose.connect(
-	keys.mongodb.dbURI,
-	{
-		useUnifiedTopology : true,
-		useNewUrlParser    : true
+	keys.mongodb.dbURI, {
+		useUnifiedTopology: true,
+		useNewUrlParser: true
 	},
 	() => {
 		console.log('connected to mongodb');
@@ -73,10 +72,12 @@ var holdTestruns = [];
 var holdGetTestrunIdsArray = [];
 var holdGetTestrunNamesArray = [];
 var holdTestrunResults = [];
+var holdGetTestruns;
 
 var holdTestRunStatusPassed = 0;
 var holdTestRunStatusFailed = 0;
 var holdTestRunStatusBlocked = 0;
+var holdTestRunStatusNotrun = 0;
 
 var projectChosen = 'Project Name';
 
@@ -84,7 +85,7 @@ var projectChosen = 'Project Name';
 
 var testCycleId;
 var testCycleIdObj = {
-	idVal : 34048,
+	idVal: 0,
 	get idUpd() {
 		return this.idVal;
 	},
@@ -95,7 +96,7 @@ var testCycleIdObj = {
 
 var testPlanId;
 var testPlanIdObj = {
-	idVal : 14953,
+	idVal: 0,
 	get idUpd() {
 		return this.idVal;
 	},
@@ -106,7 +107,7 @@ var testPlanIdObj = {
 
 var projectId;
 var projectIdObj = {
-	idVal : 48,
+	idVal: 0,
 	get idUpd() {
 		return this.idVal;
 	},
@@ -116,7 +117,7 @@ var projectIdObj = {
 };
 
 var holdTestPlansObj = {
-	tpVal : {},
+	tpVal: {},
 	get tpUpd() {
 		return this.tpVal;
 	},
@@ -156,13 +157,14 @@ var getTestPlans =
 
 function getTestPlansFunction(projId, startAt) {
 	getTestPlans =
+
 		'https://alpine-electronics.jamacloud.com/rest/v1/testplans?project=' +
 		projId +
 		'&startAt=' +
 		startAt +
 		'&maxResults=50';
 	//return getTestPlans;
-	// doTestPlanRequest();
+
 }
 
 // 3 getTestCycles = returns test cycles -- how many cycles per release (testPlan), data[i].fields.name = "Cycle1", data[i].id = testCycleId
@@ -205,26 +207,21 @@ var auth = 'Basic ' + new Buffer(username + ':' + password).toString('base64');
 
 //-------------   express REST ----------------//
 //submits a post
-app.post('/project/runall', (req, res) => {
-	projectIdObj.idUpd = req.body.projectId;
-	testPlanIdObj.idUpd = req.body.testPlanId;
-	testCycleIdObj.idUpd = req.body.testCycleId;
-	//doProjectRequest();
-});
+// app.post('/project/runall', (req, res) => {
+// 	projectIdObj.idUpd = req.body.projectId;
+// 	testPlanIdObj.idUpd = req.body.testPlanId;
+// 	testCycleIdObj.idUpd = req.body.testCycleId;
+// 	//doProjectRequest();
+// });
 
 //submits a projectId
-app.post('/project:id', (req, res) => {
-	projectId = req.params.projectId;
-});
+// app.post('/project:id', (req, res) => {
+// 	projectId = req.params.projectId;
+// });
 
 //submit testPlanId
-app.post('/project/:testPlanId', (req, res) => {
-	testPlanId = req.params.testPlanId;
-});
-
-// not sure this is needed yet
-// app.post('/project/:testCycleId', (req, res) => {
-//     testCycleId = req.params.testCycleId;
+// app.post('/project/:testPlanId', (req, res) => {
+// 	testPlanId = req.params.testPlanId;
 // });
 
 //GET projects
@@ -241,14 +238,14 @@ app.get('/projects', (req, res) => {
 
 //GET testplans
 app.get('/testplans', (req, res) => {
-	try {
-		//execute test plan request with latest project
-		doTestPlanRequest();
-		//sending back test plans - wait for function above to execute
-		setTimeout(() => {
-			res.send(holdTestplans);
-		}, 1000);
-	} catch (err) {}
+	//try {
+	//execute test plan request with latest project
+	doTestPlanRequest();
+	//sending back test plans - wait for function above to execute
+	setTimeout(() => {
+		res.send(holdTestplans);
+	}, 1000);
+	//} catch (err) {}
 });
 
 //POST testplans
@@ -283,32 +280,36 @@ app.get('/testcycles', (req, res) => {
 });
 
 //GET testcycles for specific testplan
-app.get('/testcycles/:testplanId', (req, res) => {
-	try {
-		let testcyclesPlan = req.params.testplanId;
-		getTestCyclesFunction(testcyclesPlan, 0);
-		//sending back test cycles
-		doTestCycleRequest();
-		//sending back test plans - wait for function above to execute
-		setTimeout(() => {
-			res.json(holdTestcycles);
-		}, 1000);
-	} catch (err) {}
-});
+// app.get('/testcycles/:testplanId', (req, res) => {
+// 	try {
+// 		let testcyclesPlan = req.params.testplanId;
+// 		getTestCyclesFunction(testcyclesPlan, 0);
+// 		//sending back test cycles
+// 		doTestCycleRequest();
+// 		//sending back test plans - wait for function above to execute
+// 		setTimeout(() => {
+// 			res.json(holdTestcycles);
+// 		}, 1000);
+// 	} catch (err) {}
+// });
 
 //POST testcycles
 app.post('/testcycles', (req, res) => {
 	try {
-		var holdTestplan = req.body.testplan;
 
+
+		var holdTestplan = JSON.parse(req.body.testplan);
+		//last thing changed.... 2.11.20 - 8:30
+		testPlanIdObj.idUpd = holdTestplan;
 		console.log('Testplan submitted for next testcycle: ' + holdTestplan);
 		//send update to which test cycle to use
 		getTestCyclesFunction(req.body.testplan, 0);
-		doTestCycleRequest();
+		//doTestCycleRequest();
 		setTimeout(() => {
-			res.json(holdTestcycles);
+			res.json(holdTestplan);
 			//holdTestplan contains testcycle_name: '' and testcycle_id: '' //
-		}, 800);
+			doTestCycleRequest();
+		}, 200);
 	} catch (err) {}
 });
 
@@ -320,6 +321,7 @@ app.get('/testruns', (req, res) => {
 		//sending back test plans - wait for function above to execute
 		setTimeout(() => {
 			res.json(holdTestruns);
+			//console.log('holdTestRuns is: ' + holdTestruns);
 		}, 2000);
 	} catch (err) {}
 });
@@ -327,17 +329,29 @@ app.get('/testruns', (req, res) => {
 //POST testcycles
 app.post('/testruns', (req, res) => {
 	try {
-		var holdTestcycle = req.body.testcycle;
+		var holdTestcycle = JSON.parse(req.body.testcycle);
 
 		console.log('Testcycle submitted for next testrun: ' + holdTestcycle);
 		//send update to which test cycle to use
-		getTestRunsFunction(req.body.testcycle, 0);
+		testCycleIdObj.idUpd = JSON.parse(req.body.testcycle);
+		console.log('testCycleIdObj.idUpd is: ' + testCycleIdObj.idUpd);
+		if (testCycleIdObj.idUpd != undefined || testCycleIdObj.idUpd != null || testCycleIdObj.idUpd != 0) {
+			getTestRunsFunction(testCycleIdObj.idUpd, 0);
+		}
 
-		setTimeout(() => {
-			//doTestRunRequest();
-			res.json(holdTestcycle);
-		}, 200);
+		//res.json(holdTestcycle);
+		// setTimeout(() => {
+		// 	//doTestRunRequest();
+		// 	//res.json(holdTestcycle);
+		// }, 200);
 	} catch (err) {}
+});
+
+//get results back
+app.get('/results', (req, res) => {
+	console.log('getting results back for pass/fail/not run');
+	doTestRunRequest();
+
 });
 
 //------------------- END REST ---------------//
@@ -381,22 +395,21 @@ function emptlyHoldTestruns() {
 
 //return an object with project names and ids into holdProject object
 function doProjectRequest() {
-	request(
-		{
-			url     : getProjects,
-			headers : {
-				Authorization : auth
+	request({
+			url: getProjects,
+			headers: {
+				Authorization: auth
 			}
 		},
-		function(error, response, body) {
+		function (error, response, body) {
 			emptlyHoldProjects();
 			var holdGetProjects = JSON.parse(response.body);
 
 			for (i = 0; i < holdGetProjects.data.length; i++) {
 				holdProjects[i] = {
-					project_name : holdGetProjects.data[i].fields.name,
-					project_key  : holdGetProjects.data[i].projectKey,
-					project_id   : holdGetProjects.data[i].id
+					project_name: holdGetProjects.data[i].fields.name,
+					project_key: holdGetProjects.data[i].projectKey,
+					project_id: holdGetProjects.data[i].id
 				};
 			}
 			console.log(holdProjects);
@@ -406,24 +419,23 @@ function doProjectRequest() {
 
 //return an object with testplan names and ids
 function doTestPlanRequest() {
-	request(
-		{
-			url     : getTestPlans,
-			headers : {
-				Authorization : auth
+	request({
+			url: getTestPlans,
+			headers: {
+				Authorization: auth
 			}
 		},
-		function(error, response) {
+		function (error, response) {
 			//need to find way to clear out object
 			emptlyHoldTestPlans();
-
+			holdTestplans.length = 0;
 			var holdGetTestplans = JSON.parse(response.body);
 
 			for (i = 0; i < holdGetTestplans.data.length; i++) {
 				//populating object called holdTestplans -- which holds testplan_name and testplan_id
 				holdTestplans[i] = {
-					testplan_name : holdGetTestplans.data[i].fields.name,
-					testplan_id   : holdGetTestplans.data[i].id
+					testplan_name: holdGetTestplans.data[i].fields.name,
+					testplan_id: holdGetTestplans.data[i].id
 				};
 			}
 			console.log('result from doTestPlanRequest:  ' + holdTestplans);
@@ -433,23 +445,22 @@ function doTestPlanRequest() {
 
 //return an object with testcycle names and ids
 function doTestCycleRequest() {
-	request(
-		{
-			url     : getTestCycles,
-			headers : {
-				Authorization : auth
+	request({
+			url: getTestCycles,
+			headers: {
+				Authorization: auth
 			}
 		},
-		function(error, response, body) {
+		function (error, response, body) {
 			emptlyHoldTestCycles();
-
+			holdTestcycles.length = 0;
 			var holdGetTestcycles = JSON.parse(response.body);
 
 			for (i = 0; i < holdGetTestcycles.data.length; i++) {
 				//populating object called hotTestcycles -- contains keys, testcycle_name and testcycle_id
 				holdTestcycles[i] = {
-					testcycle_name : holdGetTestcycles.data[i].fields.name,
-					testcycle_id   : holdGetTestcycles.data[i].id
+					testcycle_name: holdGetTestcycles.data[i].fields.name,
+					testcycle_id: holdGetTestcycles.data[i].id
 				};
 				//holdTestCyclesArray.push(holdTestcycles[i].testcycle_id);
 			}
@@ -461,32 +472,34 @@ function doTestCycleRequest() {
 //return an object with testcycle names and ids
 function doTestRunRequest() {
 	console.log('-------------------------------------------------------------------------------------');
-	request(
-		{
+	console.log('doTestRunRequest() --- getTestRuns is: ' + getTestRuns);
+	request({
 			// url     : getTestRunsFunction(testCycleIdObj.idUpd, 0),
-			url     : getTestRuns,
-			headers : {
-				Authorization : auth
+			url: getTestRuns,
+			headers: {
+				Authorization: auth
 			}
 		},
-		function(error, response, body) {
+		function (error, response, body) {
 			//clear out testruns from previous reqest
 			emptlyHoldTestruns();
 
 			holdTestRunStatusPassed = 0;
 			holdTestRunStatusFailed = 0;
-
+			holdTestRunStatusBlocked = 0;
+			holdTestRunStatusNotrun = 0;
+			console.log('holdGetTestruns are: ' + holdGetTestruns);
 			//holds all the various cycles for the selected testplan
-			var holdGetTestruns = JSON.parse(response.body);
+			holdGetTestruns = JSON.parse(response.body);
 
 			//returns amound of test runs for selected test cycle
 			console.log('returned test runs:  ' + holdGetTestruns.data.length);
 
 			for (i = 0; i < holdGetTestruns.data.length; i++) {
 				holdTestruns[i] = {
-					testrun_name   : holdGetTestruns.data[i].fields.name,
-					testrun_id     : holdGetTestruns.data[i].id,
-					testrun_status : holdGetTestruns.data[i].fields.testRunStatus
+					testrun_name: holdGetTestruns.data[i].fields.name,
+					testrun_id: holdGetTestruns.data[i].id,
+					testrun_status: holdGetTestruns.data[i].fields.testRunStatus
 				};
 				if (holdGetTestruns.data[i].fields.testRunStatus == 'PASSED') {
 					holdTestRunStatusPassed += 1;
@@ -494,11 +507,14 @@ function doTestRunRequest() {
 					holdTestRunStatusFailed += 1;
 				} else if (holdGetTestruns.data[i].fields.testRunStatus == 'BLOCKED') {
 					holdTestRunStatusBlocked += 1;
+				} else if (holdGetTestruns.data[i].fields.testRunStatus == 'NOT_RUN') {
+					holdTestRunStatusNotrun += 1;
 				}
 				//"Not Run" and "In Progress" options...
 			}
-			//console.log(holdTestruns);
-			testResults();
+			//
+			console.log(holdTestruns);
+			//testResults();
 		}
 	);
 
@@ -509,6 +525,7 @@ function testResults() {
 	console.log('Testrun Status Passed: ' + holdTestRunStatusPassed);
 	console.log('Testrun Status Failed: ' + holdTestRunStatusFailed);
 	console.log('Testrun Status Blocked: ' + holdTestRunStatusBlocked);
+	console.log('Testrun Status Not Run: ' + holdTestRunStatusNotrun);
 }
 
 app.listen(PORT, () => {

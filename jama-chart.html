@@ -61,6 +61,7 @@
 
     let testcycleNames = [];
     let testcycleIds = [];
+    let testcycleDropdownTotal = 0;
 
     let testrunPassed = 0;
     let testrunFailed = 0;
@@ -73,12 +74,25 @@
 
     let holdTestplans;
 
+    let resultsTotal;
+
     //this will be address of api
     let fetchAddress;
     var $projectChoice =  $("#project-choice");
     var $testplanChoice =  $("#testplan-choice");
     var $testcycleChoice =  $("#testcycle-choice");
     let serverUrl = 'http://localhost:3000';
+
+    let numberOfTestRuns = 0;
+    let numberOfTestRunsPassed = 0;
+    let numberOfTestRunsFailed = 0;
+    let numberOfTestRunsBlocked = 0;
+    let numberOfTestRunsNotRun = 0;
+
+    let $passedNumber = $("#passedNumber");
+    let $failedNumber = $("#failedNumber");
+    let $blockedNumber = $("#blockedNumber");
+    let $notrunNumber = $("#notrunNumber");
 
     </script>
  </head>
@@ -89,15 +103,14 @@
         <img src="Alpine.png" style="margin-left: 50px;padding:8px; padding-top: 20px; background-color:white;  text-align: center;"/> 
         <hr>
         <p style="text-align: left; background-color: white; margin-left: 60px;" class="h3">
-           <span style="font-family: Arial, Helvetica, sans-serif;"> JAMA Results - Pass/Fail/Blocked </span>
-        </p> 
+           <span style="font-family: Arial, Helvetica, sans-serif;"> JAMA API - Test Run Results - Per Chosen Test Cycle </span>
+        </p> <br />
         <form style="text-align: left; margin-left: 60px;" > 
-            
             <table style="width: 100%;">
                 <tr>
-                    <td  style="text-align: left; margin-left: 60px;" >Choose Your Project: </td>
-                    <td  style="text-align: left; margin-left: 60px;">Test Plan: </td>
-                    <td  style="text-align: left; margin-left: 60px;">Test Cycle: </td>
+                    <td  style="text-align: left; width: 34%;" >Choose Project: </td>
+                    <td  style="text-align: left; width: 33%;">Choose Test Plan: </td>
+                    <td  style="text-align: left; width: 33%;">Choose Test Cycle: </td>
                 </tr>
                 <tr>
                     <td>
@@ -116,10 +129,86 @@
                         </select>&nbsp;
                     </td>
                 </tr>
+
+                
             </table>
             
             
         </form>
+        
+        <br /> <br />
+        <h4 style="width: 100%; text-align: left; margin-left: 60px; margin-bottom: -15px;"><span id="testrunsTotal">#</span> Testruns Total </h4>  <br /> 
+        <table style="width:500px; text-align: left; margin-left: 60px; border-top:1pt solid grey; padding-bottom: 20px;">  
+           <tr>
+                <td style="width: 30%; text-align: center; margin-left: 60px;">
+                    
+                    <h5 class="passed-amount">
+                        <span id="passedNumber">#</span>
+                    </h5>
+                </td >
+                <td  style="text-align: center; margin-left: 60px;width: 33%">                    
+                    <h5>
+                        PASSED
+                    </h5>
+                </tdstyle="width:>
+                <td style="text-align: center; margin-left: 60px;width: 33%">
+                    <h5 class="passed-amount-percent">
+                        <span id="passedPercent">%</span>
+                    </h5>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center; margin-left: 60px;width: 33%">
+                    <h5 class="failed-amount">
+                        <span id="failedNumber">#</span>
+                    </h5>
+                </td>
+                <td style="text-align: center; margin-left: 60px;width: 33%;">
+                    <h5>
+                        FAILED
+                    </h5 >    
+                </td>
+                <td style="text-align: center; margin-left: 60px;width: 33%">
+                    <h5 class="failed-amount-percent">
+                        <span id="failedPercent">%</span>
+                    </h5>
+                </td>
+            </tr>
+            <tr>
+                <td  style="text-align: center; margin-left: 60px;width: 33%">
+                    <h5 class="blocked-amount">
+                        <span id="blockedNumber">#</span>
+                    </h5>
+                </td>
+                <td style="text-align: center; margin-left: 60px;width: 33%;">
+                    <h5>
+                        BLOCKED
+                    </h5>
+                </td>
+                <td  style="text-align: center; margin-left: 60px;width: 33%">
+                    <h5 class="blocked-amount-percent">
+                        <span id="blockedPercent">%</span>
+                    </h5>
+                </td>
+            </tr>
+            <tr>
+                <td  style="text-align: center; margin-left: 60px;width: 33%">
+                    <h5 class="notrun-amount">
+                        <span id="notrunNumber">#</span>
+                    </h5>
+                </td>
+                <td style="text-align: center; margin-left: 60px;width: 33%;">
+                    <h5>
+                        NOT RUN
+                    </h5>
+                </td>
+                <td  style="text-align: center; margin-left: 60px;width: 33%">
+                    <h5 class="notrun-amount-percent">
+                        <span id="notrunPercent">%</span>
+                    </h5>
+                </td>
+            </tr>
+        </table>
                 
         <!-- //This will be the chart -->
         <div id="myDiv" style="height: 760px"></div> 
@@ -175,9 +264,9 @@
                     }
                 }
 
-                setTimeout( () => {
-                   // getTestplanDropdown();
-                }, 100);
+                // setTimeout( () => {
+                //    // getTestplanDropdown();
+                // }, 100);
             });
         });
 
@@ -215,11 +304,11 @@
         function getTestcycleDropdown(){
             console.log('populating testcycle dropdown');
             $.getJSON(serverUrl+"/testcycles", async function(data) {
-            
+           //testcycleDropdownTotal = 0;
             //console.log(data);
             await $.each(data, function(index, value) {
                 console.log(value.testcycle_name + ' testcycle was added...');
-                
+                //testcycleDropdownTotal++;
                 //give uniuqe project names for dropdown - send to array
                 testcycleNames.push(value.testcycle_name );
                 testcycleIds.push(value.testcycle_id );
@@ -233,9 +322,15 @@
                     if(testcycleNames[i] != undefined){
                         
                         $('#testcycle-choice').append('<option value="' + testcycleIds[i] + '">' + testcycleNames[i] + '</option>');
-                        // getTestcycleDropdown call next()
+                        
                     }
+                    
                 }
+                // if(testcycleDropdownTotal === data.length){
+                //     console.run('run final count of PASS/FAIL/NotRUn');
+                //     runChosenTestruns();
+                // }
+
             });
         }
 
@@ -277,10 +372,7 @@
             runGetTestCycles();
             getTestcycleDropdown();
 
-            //var holdSecondDropdownVal = document.getElementById("second-choice");
-            //holdSecondDropdownVal.options[value="0"];   
-
-            //will revisit this LATER
+            //RUN A Chart call now
            // apiGetAll(project);
         });
 
@@ -297,7 +389,10 @@
 
             
             console.log('testcycle chosen --> '+ testcycleVal);
-            
+            postTestruns(testcycleVal);
+            //run call to calculate all passed/failed/blocked/not run for each test cycle then show it on a table 
+            runChosenTestruns();
+            //getResults();
         });
 
         //this will become call for chart...
@@ -320,10 +415,6 @@
 
             }   
 
-            //get test cycles for each test plan 
-
-            //use ids from each cycle to do testrun requests
-
 
         } // end of getTestPlanInfo //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -335,27 +426,13 @@
             testplanIds.length = 0;
 
             $.get(serverUrl+"/testplans", async (data) => {
-               
-                // for(var i=0; i<data.length; i++){
-                //     console.log('data.length is : '+ data.length);        
-                // }
-                // testplansObject = data.reduce(function(prev, curr){
-                //         prev[curr.key] = curr.value;
-                //         return prev;
-                //     }, {});
-
-                //console.log('holdTestPlansObject ---- ' + data);
-                
+                               
                 await data.forEach((item) => {
 
-
-                    //count testplans to run callback after all processed
                     testplansTotal++;
 
                     testplanNames.push(item.testplan_name );
                     testplanIds.push(item.testplan_id );
-
-                    //console.log('testplansObject: '+ testplansObject);
                    
                     console.log("Number of testplans for this project is: "+data.length);
                     
@@ -366,7 +443,7 @@
                         console.log('in runChosenTestPlan() '+ testplanNames);
                         //run a POST to testcycles first
                         postChosenTestcycles();
-                        // do this after POSTrunChosenTestcycles();
+                        // do this after POSTrunCtestcycleIds currently found hosenTestcycles();
                     }
                 });
             });
@@ -375,16 +452,9 @@
         function postChosenTestcycles(){
             console.log('in postChosenTestCycles()');
             
-            // for(i=0; i<testplanIds.length; i++){
-                
-            //     holdTpId = testplanIds[i];
-            //     console.log('testplanIds currently is: '+ holdTpId);
-
-            //    // postTestCycles();
-            // }
             testplanIds.forEach((thing) => {
                 holdTpId = thing;
-                console.log('testplanIds currently is: '+ holdTpId);
+                console.log('testcycleIds currently found are: '+ holdTpId);
             })
 
         }
@@ -393,10 +463,19 @@
             $.post(serverUrl+"/testcycles", 
                 {"testplan": tp}, 
                 () => {
-                    //now need to run GET /testcycles to push result to another obj/array
+                    
                     console.log('--> running runGetTestCycles next ');
-                    //runGetTestCycles();
-                    //runGetTestCycles();  <<-- this caused the duplicates
+                    
+                });
+        }
+
+        function postTestruns(tc){
+            $.post(serverUrl+"/testruns", 
+                {"testcycle": tc}, 
+                () => {
+                    //need to make object to hold returned data from testruns
+                    console.log('... hit postTestruns ... ');
+                    
                 });
         }
 
@@ -407,8 +486,11 @@
                  await data.forEach((item) => {
                      //count testplans to run callback after all processed
                      console.log('project: '+ project + ' holdTpId is: ' + holdTpId + ' item.testcycle_name is: ' + item.testcycle_name);
-                     testcycleNames.push(item.testcycle_name);
-                     testcycleIds.push(item.testcycle_id);   
+                     
+                     //turned this off below to remove duplicate testcycles showing up in dropdown
+                     //testcycleNames.push(item.testcycle_name);
+                     //testcycleIds.push(item.testcycle_id);   
+                     
                      console.log('all testcycleIds are: '+testcycleIds); 
 
                  });
@@ -418,17 +500,15 @@
         function runChosenTestcycles(){
             console.log('runChosenTestcycles function() -- stuff currently in testplanNames/testplanIds: '+ testplanNames);
             testcyclesTotal = 0;
-            //need to get all testcycles per testplan chosen -- make object with {testplan: {testcycle1, testcycle2...}, testplan2: {...}...}
-            //get /testcycles
-            //------------------->>>> do for each testplan a testcycle GET request
- 
-            //may need to do a POST with testplanIds then a GET to get results
+             
+            //may need to do a POST with testplanIds then a GET to get testcycles results
             //may need to remove this for loop and make a GET call or multiple get calls for each testplanIds
             for(let i=0; i < testplanIds.length; i++){
 
                 console.log('testplanName: ' + testplanNames[i]);
                 console.log('testplanId: ' + testplanIds[i]);
                 testcyclesTotal++;
+                holdTpId.length = 0;
 
                 holdTpId = testplanIds[i];
                 console.log('holdTpId is: '+ holdTpId);
@@ -446,51 +526,99 @@
                 });
                 
             }
-            // if(testcyclesTotal === testplanIds.length){
-            //                 //need to POST what testplan was chosen to server to get testcycles
-            //                 console.log('testcyclesTotal === testplanIds.length HAPPENED');
-            //                 runChosenTestruns();
-            //             }
-            
         }
 
         function runChosenTestruns(){
 
-            console.log('in runChosenTestcycles() -- testcyclenames: '+ testcycleNames);
-            console.log('in runChosenTestcycles() -- testcycleIds: '+ testcycleIds);
-            console.log('number of testcycles total for all testplans: '+ testcycleNames.length);
+            //console.log('in runChosenTestcycles() -- testcyclenames: '+ testcycleNames);
+            //console.log('in runChosenTestcycles() -- testcycleIds: '+ testcycleIds);
+           // console.log('number of testcycles total for all testplans: '+ testcycleNames.length);
             
             console.log('runChosenTestruns function() -- need to now get PASSED/FAILED/BLOCKED...');
             testrunsTotal = 0;
+
+            numberOfTestRunsPassed = 0;
+            numberOfTestRunsFailed = 0;
+            numberOfTestRunsBlocked = 0;
+            numberOfTestRunsNotRun = 0;
+
             //get /testruns -- getting passed failed blocked per test cycle
             $.get(serverUrl+"/testruns", async (data) => {
                 await data.forEach((item) => {
                     //count testplans to run callback after all processed
                     testrunsTotal++;
+                    console.log(item);
+                    console.log('Number of items: ' + data.length);
+                    numberOfTestRuns = data.length;
 
-                    //need to count pass/fail/blocked now
-                    
-                    // testcycleNames.push(item.testcycle_name );
-                    // testcycleIds.push(item.testcycle_id );
-                    // console.log(data.length);
-                    
+                    if(item.testrun_status == "PASSED"){
+                        console.log("testrun_passed");
+                        numberOfTestRunsPassed++;
+                        
+                    } else if(item.testrun_status == "FAILED"){
+                        console.log("testrun_failed");
+                        numberOfTestRunsFailed++;
+                       
+                    } else if(item.testrun_status == "BLOCKED"){
+                        console.log("testrun_blocked");
+                        numberOfTestRunsBlocked++;
+                        
+                    } else if(item.testrun_status == "NOT_RUN"){
+                        console.log("testrun_notrun");
+                        numberOfTestRunsNotRun++;
+                        
+                    }
 
                     //console.log('in runChosenTestruns() '+ testcycleNames);
                     if(testrunsTotal === data.length){
-                        runChart();
+                        runTotals();
+                        
                     }
                 });
             });
         }
 
+        function getResults(){
 
+            
+            console.log('In getResults()');
+            //resultsTotal.length = 0;
+
+            // $.get(serverUrl+"/results", async (data) => {
+            //     await data.forEach((item) => {
+            //         //count testplans to run callback after all processed
+            //         //testrunsTotal++;
+                    
+            //         //run chart once resultsTotal is done
+            //         if(testrunsTotal === data.length){
+            //             runTotals();
+            //         }
+            //     });
+            // });
+            }
+
+        function runTotals(){
+            console.log('-- runTotals --');
+            console.log('Testruns Total: '+ testrunsTotal + ', Amount Passed: '+ numberOfTestRunsPassed + ', Amount Failed: '+ numberOfTestRunsFailed + ', Amount Blocked: '+ numberOfTestRunsBlocked + ', Amount Not Run: ' + numberOfTestRunsNotRun);
+            //now runChart to make chart of data
+            $('#testrunsTotal').text(numberOfTestRuns);
+            $('#passedNumber').text(numberOfTestRunsPassed);
+            $('#failedNumber').text(numberOfTestRunsFailed);
+            $('#blockedNumber').text(numberOfTestRunsBlocked);
+            $('#notrunNumber').text(numberOfTestRunsNotRun);
+           
+            $('#passedPercent').html(Math.round((numberOfTestRunsPassed/numberOfTestRuns)*100) + '%');
+            $('#failedPercent').text(Math.round((numberOfTestRunsFailed/numberOfTestRuns)*100) + '%');
+            $('#blockedPercent').text(Math.round((numberOfTestRunsBlocked/numberOfTestRuns)*100) + '%');
+            $('#notrunPercent').text(Math.round((numberOfTestRunsNotRun/numberOfTestRuns)*100) + '%');
+            runChart();
+        }
         function runChart(){
             console.log('-- runChart --');
         }
 
 
-        
-        //apiGetAll(machine_id);
+        //this below is just for reference based on previous chart made for AVMSM.. easy to switch out with values above
         //function to run the map plotting below -----------------------------------------------------------------------------------//
         function apiGetAll(yo){
             try {
