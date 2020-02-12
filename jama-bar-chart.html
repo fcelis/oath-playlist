@@ -101,6 +101,11 @@
     var projectN;
     var testcycleN;
     var testplanN;
+
+    let chartPassedObj;
+    let chartFailedObj;
+    let chartBlockedObj;
+    let chartNotrunObj;
     </script>
  </head>
 
@@ -261,7 +266,7 @@
                 </td>
             </tr>
         </table>
-                
+                <hr>
         <!-- //This will be the chart -->
         <div id="myDiv" style="height: 760px"></div> 
     </div>
@@ -351,7 +356,7 @@
                         //console.log('adding projectChoice to dropdown');
                     }
                 }
-            });
+            }); 
         }
 
         function getTestcycleDropdown(){
@@ -393,7 +398,7 @@
             
             holdDropdownVal.options[holdDropdownVal.selectedIndex].value;
             project = holdDropdownVal.options[holdDropdownVal.selectedIndex].value;
-            projectN = holdDropdownVal.options[holdDropdownVal.selectedIndex],name;
+            projectN = holdDropdownVal.options[holdDropdownVal.selectedIndex].text;
            
             emptyHoldTestPlans();
             emptyHoldTestCycles();
@@ -405,10 +410,27 @@
             //run post on getTestPanInfo(project) then call the GET on getTestplanDropdown()
             getTestPlanInfo(project);
             getTestplanDropdown();
-            $('#projectN').html(projectN);
+            $('#projectN').text(projectN);
+
+            clearResults();
+            
+        });
+
+        function clearResults(){
             $('#testplanN').html("Test Plan Name");
             $('#testcycleN').html("Test Cycle Name");
-        });
+
+            $('#testrunsTotal').html('#');
+            $('#passedNumber').html('#');
+            $('#failedNumber').html('#');
+            $('#blockedNumber').html('#');
+            $('#notrunNumber').html('#');
+           
+            $('#passedPercent').html('%');
+            $('#failedPercent').html('%');
+            $('#blockedPercent').html('%');
+            $('#notrunPercent').html('%');
+        }
 
         //dropdown for selecting testplans
         $("#testplan-choice").change(function() {
@@ -416,10 +438,8 @@
             
             holdTpDropdownVal.options[holdTpDropdownVal.selectedIndex].value;
             testplanVal = holdTpDropdownVal.options[holdTpDropdownVal.selectedIndex].value;
-            testplanN = holdTpDropdownVal.options[holdTpDropdownVal.selectedIndex],name;
-            //project = project.split("_").pop();
+            testplanN = holdTpDropdownVal.options[holdTpDropdownVal.selectedIndex].text;
             
-            //var matches = regExp.exec(machine);
             //empty arrays before switching to next project chosen
             emptyHoldTestPlans();
             emptyHoldTestCycles();
@@ -432,11 +452,10 @@
             runGetTestCycles();
             getTestcycleDropdown();
 
-            
-            $('#testplanN').html(testplanN);
+            //problem is likely using .html instead of .text
+            $('#testplanN').text(testplanN);
 
-            //RUN A Chart call now
-           // apiGetAll(project);
+           clearResults();
         });
 
         //dropdown for selecting test cycles
@@ -445,7 +464,7 @@
             
             holdTestcycleDropdownVal.options[holdTestcycleDropdownVal.selectedIndex].value;
             testcycleVal = holdTestcycleDropdownVal.options[holdTestcycleDropdownVal.selectedIndex].value;
-            testcycleN = holdTestcycleDropdownVal.options[holdTestcycleDropdownVal.selectedIndex],name;
+            testcycleN = holdTestcycleDropdownVal.options[holdTestcycleDropdownVal.selectedIndex].text;
 
             emptyHoldTestPlans();
             emptyHoldTestCycles();
@@ -459,7 +478,7 @@
             runChosenTestruns();
             //getResults();
             
-            $('#testcycleN').html(testcycleN);
+            $('#testcycleN').text(testcycleN);
         });
 
         //this will become call for chart...
@@ -489,8 +508,8 @@
             //console.log('runChosenTestPlan function: ');
             testplansTotal = 0;
             emptyHoldTestPlans();
-            testplanNames.length = 0;
-            testplanIds.length = 0;
+            // testplanNames.length = 0;
+            // testplanIds.length = 0;
 
             $.get(serverUrl+"/testplans", async (data) => {
                                
@@ -591,15 +610,10 @@
                         
                     });
                 });
-                
             }
         }
 
         function runChosenTestruns(){
-
-            //console.log('in runChosenTestcycles() -- testcyclenames: '+ testcycleNames);
-            //console.log('in runChosenTestcycles() -- testcycleIds: '+ testcycleIds);
-           // console.log('number of testcycles total for all testplans: '+ testcycleNames.length);
             
             console.log('runChosenTestruns function() -- need to now get PASSED/FAILED/BLOCKED...');
             testrunsTotal = 0;
@@ -646,8 +660,6 @@
         }
 
         function getResults(){
-
-            
             console.log('In getResults()');
            
         }
@@ -656,9 +668,6 @@
             console.log('-- runTotals --');
             console.log('Testruns Total: '+ testrunsTotal + ', Amount Passed: '+ numberOfTestRunsPassed + ', Amount Failed: '+ numberOfTestRunsFailed + ', Amount Blocked: '+ numberOfTestRunsBlocked + ', Amount Not Run: ' + numberOfTestRunsNotRun);
             //now runChart to make chart of data
-
-            
-
             $('#testrunsTotal').html(numberOfTestRuns);
             $('#passedNumber').html(numberOfTestRunsPassed);
             $('#failedNumber').html(numberOfTestRunsFailed);
@@ -673,134 +682,95 @@
         }
         function runChart(){
             console.log('-- runChart --');
+            callChart();
+
         }
 
 
         //this below is just for reference based on previous chart made for AVMSM.. easy to switch out with values above
         //function to run the map plotting below -----------------------------------------------------------------------------------//
-        function apiGetAll(yo){
+        function callChart(){
             try {
-                console.log('in apiGetAll() -- getting project data');
+                console.log('in callChart() -- getting project data');
 
-                //start of fetch/GET
-                 $.getJSON((fetchAddress+yo), async function(data) {
-                
-                    let tempDate;
-                    await data.forEach((item) => {
-
-                        tempDate = new Date(item.date);
-                        let tzoffset = (new Date()).getTimezoneOffset() * (60000); //offset in milliseconds
-                        let localISOTime = (new Date(tempDate - tzoffset)).toISOString().slice(0, -1);
-                        
-                    });
-
-                    //CPU Total
-                    xDataCPU = yo.map(item => {                        
-                        holdDate = new Date(item.date);  
-                        return holdDate;
-                    });
-
-                    yDataCPU = yo.map(item => { 
-                        try{
-                            var yTemp = (item.data[0].cpu);
-                            return yTemp;
-                        } catch {
-
-                        }
-                    });
-                    
-                    yDataMemUsed = yo.map(item => { 
-                        try {
-                            var temp = (item.data[0].used_memory);
-                            //console.log('yDataMemUsed: '+ temp);
-                            return temp;
-                        }
-                        catch {
-
-                        }
-                    });
-                    //End networkOut
-
-                    
-                    //each of these data points need to contain all pass/fail per given project in order of releases
-                    core_usage_6 = {
+                    //PASSED - will use these objects later
+                    chartPassedObj = {
                         type: "bar",
                         mode: "lines",
-                        name: 'CPU Core 6 Used - %',
-                        x: xDataCPU,
-                        y: yData_core_usage_6,
+                        name: 'Test Runs Passed',
+                        x: 'Passed',
+                        y: numberOfTestRunsPassed,
                         line: {color: '#BF2063'},
                         hoverlabel: {namelength: -1},
                         layout: {legend: 'toggleothers'},
                         visible: 'legendonly'
                     }; 
-
-                    core_usage_7 = {
+                    //FAILED - will use these objects later
+                    chartFailedObj = {
                         type: "bar",
                         mode: "lines",
-                        name: 'CPU Core 7 Used - %',
-                        x: xDataCPU,
-                        y: yData_core_usage_7,
-                        line: {color: '#DF40B1'},
+                        name: 'Test Runs Failed',
+                        x: 'Failed',
+                        y: numberOfTestRunsPassed,
+                        line: {color: '#BF2473'},
                         hoverlabel: {namelength: -1},
                         layout: {legend: 'toggleothers'},
                         visible: 'legendonly'
-                    };                         
-                    //end of updated data 
+                    }; 
+                    //BLOCKED - will use these objects later
+                    chartBlockedObj = {
+                        type: "bar",
+                        mode: "lines",
+                        name: 'Test Runs Blocked',
+                        x: 'Blocked',
+                        y: numberOfTestRunsBlocked,
+                        line: {color: '#B44473'},
+                        hoverlabel: {namelength: -1},
+                        layout: {legend: 'toggleothers'},
+                        visible: 'legendonly'
+                    };
+                    //FAILED - will use these objects later
+                    chartNotrunObj = {
+                        type: "bar",
+                        mode: "lines",
+                        name: 'Test Runs Not Run',
+                        x: 'Failed',
+                        y: numberOfTestRunsFailed,
+                        line: {color: '#Bc2213'},
+                        hoverlabel: {namelength: -1},
+                        layout: {legend: 'toggleothers'},
+                        visible: 'legendonly'
+                    };
 
-                    //data order for chart
-                    data = [core_usage_6, core_usage_7];
-                    // 
-                    let layout = {
-                        title: `Project: ` + project,
-                        showlegend: true,
-                        hoverlabel: {width: 777},
-                        xaxis: {
-                            rangeselector: {buttons: [
-                                {
-                                    count: 7,
-                                    step: 'day',
-                                    stepmode: 'backward'
-                                },
-                                {
-                                    step: 'all'
-                                }
-                                ]},
-                            rangeslider: {
-                                // oneWeekAgo,
-                                // today
-                            },
-                            range: [
-                                // oneWeekAgo,
-                                // today
-                            ],
-                            type: 'date'
-                        },
-                        yaxis: {
-                            autorange: true,
-                            range: [],
-                            type: 'linear'
+                    
+                    data = [
+                        {
+                         x: ['PASSED', 'FAILED', 'BLOCKED', 'NOT RUN'],
+                         y: [numberOfTestRunsPassed, numberOfTestRunsFailed, numberOfTestRunsBlocked, numberOfTestRunsNotRun],
+                         type: 'bar',
+                         marker: {
+                                color: ['rgb(0,255,0)', 'rgb(255,0,0)', 'rgb(255,174,0)', 'rgb(0,123,255)']
+                            }   
                         }
+                    ];
+                    // 'Project: ' + projectName + ' Test Plan: '+ testplanN + ' Test Cycle: ' + testcycleN
+                    var layout = {
+                        title: 'Test Cycle Results',
+                        showlegend: false,
+                        hoverlabel: {width: 777}
                     };
                     //render chart
-                    Plotly.newPlot(myDiv, data, layout);         
+                    Plotly.newPlot('myDiv', data, layout);         
                     //show link to download CSV
-                    
-                    updates = {
-                            layout: {legend:'toggleothers'}
-                    }
-                    itemEventsData.layout.legend = 'toggleothers';
-                        
-            })
+            }
+            catch (err) {
+                console.log(err);
+            }
         }
-        catch (err) {
-            console.log(err);
-        }
-    }
 </script>    
 
 <script>
-    // way to download/save to csv file
+    // way to download/save to csv file -- will visit this later
     function downloadCSV(){
         var csv = Papa.unparse(itemsFormatted);
         var holdDate = new Date();
