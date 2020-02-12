@@ -405,7 +405,9 @@
             //run post on getTestPanInfo(project) then call the GET on getTestplanDropdown()
             getTestPlanInfo(project);
             getTestplanDropdown();
-            $('#projectN').html(projectN)
+            $('#projectN').html(projectN);
+            $('#testplanN').html("Test Plan Name");
+            $('#testcycleN').html("Test Cycle Name");
         });
 
         //dropdown for selecting testplans
