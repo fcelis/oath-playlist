@@ -168,9 +168,9 @@
             
         </form>
        
-         
+         <br />
              
-        <table class="table table-bordered">   
+        <table class="table table-bordered table-hover">   
             <!-- <tr>
                 <p style="width: 100%; text-align: center;font-size:x-large; ">
                     <span class="p" id="testrunsTotal" style="color: #007bff; ">#</span> 
@@ -184,12 +184,12 @@
                     <h5 class="passed-amount">
                         <span id="testrunsTotal"  style="color: #007bff;">#</span>
                     </h5>
-                </td >
+                </td>
                 <td  style="text-align: center; width: 33%; color: #007bff;">                    
                     <h5>
                         TOTAL
                     </h5>
-                </tdstyle="width:>
+                </td>
                 <td style="text-align: center; width: 33%; color: #007bff;">
                     <h5 class="passed-amount-percent">
                         <span id="totalPercent">100%</span>
@@ -202,12 +202,12 @@
                     <h5 class="passed-amount">
                         <span id="passedNumber">#</span>
                     </h5>
-                </td >
+                </td>
                 <td  style="text-align: center; width: 33%">                    
                     <h5>
                         PASSED
                     </h5>
-                </tdstyle="width:>
+                </td>
                 <td style="text-align: center; width: 33%">
                     <h5 class="passed-amount-percent">
                         <span id="passedPercent">%</span>
@@ -266,7 +266,6 @@
                 </td>
             </tr>
         </table>
-                <hr>
         <!-- //This will be the chart -->
         <div id="myDiv" style="height: 760px"></div> 
     </div>
@@ -300,7 +299,6 @@
         $(document).ready(function() {
             //make server that will find all unique projects - CREATE ROUTE FOR FINDING PROJECTS
             $.getJSON(serverUrl+"/projects", async function(data) {
-
                 // will need to cycle through route to get only project names = UNIQUE PROJECTS
                 //console.log(data);
                 await $.each(data, function(index, value) {
@@ -317,13 +315,10 @@
                 for(i=0; i<projectNames.length; i++){                    
                     if(projectNames[i] != undefined){
                         $('#project-choice').append('<option value="' + projectIds[i] + '">' + projectNames[i] + '</option>');
-                        //console.log('adding projectChoice to dropdown');
+                        
                     }
                 }
 
-                // setTimeout( () => {
-                //    // getTestplanDropdown();
-                // }, 100);
             });
         });
 
@@ -410,10 +405,10 @@
             //run post on getTestPanInfo(project) then call the GET on getTestplanDropdown()
             getTestPlanInfo(project);
             getTestplanDropdown();
-            $('#projectN').text(projectN);
+            
 
             clearResults();
-            
+            $('#projectN').text(projectN);
         });
 
         function clearResults(){
@@ -451,11 +446,11 @@
             postTestCycles(testplanVal);
             runGetTestCycles();
             getTestcycleDropdown();
-
+            clearResults();
             //problem is likely using .html instead of .text
             $('#testplanN').text(testplanN);
 
-           clearResults();
+           
         });
 
         //dropdown for selecting test cycles
