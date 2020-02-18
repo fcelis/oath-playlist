@@ -623,8 +623,9 @@
                 await data.forEach((item) => {
                     //count testplans to run callback after all processed
                     testrunsTotal++;
+                    console.log("\n Project-"+ projectName + ", Testplan-" + testplanName + ", Testcycle-" + testcycleName);
                     console.log(item);
-                    console.log('Number of items: ' + data.length);
+                    console.log('Total # of testruns for this selection: ' + data.length);
                     numberOfTestRuns = data.length;
 
                     if(item.testrun_status == "PASSED"){
@@ -686,7 +687,7 @@
         //function to run the map plotting below -----------------------------------------------------------------------------------//
         function callChart(){
             try {
-                console.log('in callChart() -- getting project data');
+            //    console.log('in callChart() -- getting project data');
 
                     //PASSED - will use these objects later
                     chartPassedObj = {
