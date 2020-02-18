@@ -37,7 +37,7 @@ app.use(express.static(__dirname + '/'));
 
 //create home route
 app.get('/', (req, res) => {
-	res.render('home');
+	res.render('jama-bar-chart');
 });
 
 // ----->
